@@ -37,7 +37,7 @@ obsidian_to_tex_params = [
         (
             "\n"
             "This is a summary of the user guide.\n"
-            R"\section{Getting Started}"
+            R"= Getting Started"
             "\n"
             "Start by installing.  Then run the program."
         ),
@@ -67,7 +67,7 @@ obsidian_to_tex_params = [
             R"\end{minipage}"
             "\n"
             "That looks like this:\n"
-            R"\section{A Section Header}"
+            R"= A Section Header"
         ),
     ),
     (
@@ -95,7 +95,7 @@ obsidian_to_tex_params = [
             R"\end{minipage}"
             "\n"
             "That looks like this:\n"
-            R"\section{A Section Header}"
+            R"= A Section Header"
         ),
     ),
     (
@@ -121,7 +121,7 @@ obsidian_to_tex_params = [
             R"\end{minipage}"
             "\n"
             "That looks like this:\n"
-            R"\section{A Section Header}"
+            R"= A Section Header"
         ),
     ),
     (
@@ -374,26 +374,26 @@ def test_obsidian_to_tex(test_name, input_text, expected):
 line_to_latex_params = [
     ("A Normal Line", "A Normal Line"),
     ("# A Title", R""),  # Title at top of markdown becomes document title
-    ("## A section Header", R"\section{A section Header}"),
+    ("## A section Header", R"= A section Header"),
     (
         "### A sub section Header",
-        R"\subsection{A sub section Header}",
+        R"== A sub section Header",
     ),
     (
         "#### A sub sub section",
-        R"\subsubsection{A sub sub section}",
+        R"=== A sub sub section",
     ),
     (
         "##### A 'paragraph'",
-        R"\paragraph{A 'paragraph'}",
+        R"==== A 'paragraph'",
     ),
     (
         "###### A 'sub paragraph'",
-        R"\subparagraph{A 'sub paragraph'}",
+        R"===== A 'sub paragraph'",
     ),
     (
         "## This section is #1",
-        R"\section{This section is \#1}",
+        R"= This section is \#1",
     ),
     (
         "Normal text is almost #1, it's #2",
@@ -467,9 +467,9 @@ embed_markdown_params = [
             "## Hello\nlorem ipsum\n![[World]]\n",
             "# World\ndolor sit\n",
         ],
-        "\\label{file_embedded_document_md}\\section{Hello}\n"
+        "\\label{file_embedded_document_md}= Hello\n"
         "lorem ipsum\n"
-        "\\label{file_embedded_document_md}\\section{World}\n"
+        "\\label{file_embedded_document_md}= World\n"
         "dolor sit",
     ),
     (
@@ -480,8 +480,8 @@ embed_markdown_params = [
             "# World\ndolor sit\n",
         ],
         "\\label{file_embedded_document_md}\n"
-        "\\subsection{lorem ipsum}\n"
-        "\\label{file_embedded_document_md}\\subsection{World}\n"
+        "== lorem ipsum\n"
+        "\\label{file_embedded_document_md}== World\n"
         "dolor sit",
     ),
     (
@@ -493,10 +493,10 @@ embed_markdown_params = [
             "## Bob\ndolor sit\n",
         ],
         "\\label{file_embedded_document_md}\n"
-        "\\section{lorem ipsum}\n"
-        "\\label{file_embedded_document_md}\\subsection{World}\n"
+        "= lorem ipsum\n"
+        "\\label{file_embedded_document_md}== World\n"
         "dolor sit\n"
-        "\\label{file_embedded_document_md}\\subsection{Bob}\n"
+        "\\label{file_embedded_document_md}== Bob\n"
         "dolor sit",
     ),
     (
@@ -507,8 +507,8 @@ embed_markdown_params = [
             "## World\ndolor sit\n",
         ],
         "\\label{file_embedded_document_md}\n"
-        "\\section{lorem ipsum}\n"
-        "\\label{file_embedded_document_md}\\subsection{World}\n"
+        "= lorem ipsum\n"
+        "\\label{file_embedded_document_md}== World\n"
         "dolor sit",
     ),
     (
@@ -517,7 +517,7 @@ embed_markdown_params = [
         [
             "## Hello\nlorem ipsum\n![[World.bmp]]\n",
         ],
-        "\\label{file_embedded_document_md}\\section{Hello}\n"
+        "\\label{file_embedded_document_md}= Hello\n"
         "lorem ipsum\n"
         R"\includegraphics[width=\columnwidth,keepaspectratio]"
         f"{{{obsidian_path.format_path(Path('embedded_document').absolute())}}}",

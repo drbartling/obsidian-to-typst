@@ -41,14 +41,14 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
     temp_dir.mkdir(parents=True, exist_ok=True)
     process_markdown.STATE.temp_dir = temp_dir
     process_markdown.STATE.file.append(filename)
-    temp_file = temp_dir / "body.tex"
+    temp_file = temp_dir / "body.typ"
 
     latex = process_markdown.obsidian_to_tex(text)
     with open(temp_file, "w", encoding="UTF-8") as f:
         f.write(latex)
 
     latex_wrapper = (
-        template if template else Path(__file__).parent / "document.tex"
+        template if template else Path(__file__).parent / "document.typ"
     )
     temp_wrapper = temp_dir / latex_wrapper.name
 
@@ -60,10 +60,7 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
         f.write(wrapper_text)
     subprocess.run(
         [
-            "latexmk",
-            "-pdf",
-            "-g",
-            '-latexoption="-shell-escape -file-line-error -halt-on-error"',
+            "typst",
             temp_wrapper,
         ],
         check=False,

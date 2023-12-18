@@ -101,11 +101,11 @@ def line_to_tex(
 def line_to_section(line: str) -> str:
     assert line.startswith("#"), line
     section_lookup = {
-        2: "section",
-        3: "subsection",
-        4: "subsubsection",
-        5: "paragraph",
-        6: "subparagraph",
+        2: "=",
+        3: "==",
+        4: "===",
+        5: "====",
+        6: "=====",
     }
     s, line = re.match(r"(#*)\s*(.*)", line).groups()
     STATE.depth = len(s)
@@ -115,7 +115,7 @@ def line_to_section(line: str) -> str:
     section_text = section_lookup[STATE.depth]
 
     line = string_to_tex(line)
-    return f"\\{section_text}{{{line}}}"
+    return f"{section_text} {line}"
 
 
 @pydantic.validate_arguments
