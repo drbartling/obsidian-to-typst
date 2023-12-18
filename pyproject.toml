@@ -1,0 +1,107 @@
+[tool.poetry]
+authors = ["Ryan Bartling <ryan.bartling@gmail.com>"]
+description = "Convert Obsidian vault documents to latex"
+license = "MIT"
+name = "obsidian_to_latex"
+readme = "README.md"
+repository = "https://github.com/drbartling/obsidian-to-latex"
+version = "0.1.6"
+
+[tool.poetry.scripts]
+obsidian_to_latex = "obsidian_to_latex.obsidian_to_latex:main"
+
+[tool.poetry.dependencies]
+click = "^8.1.3"
+colorama = "^0.4.6"
+coloredlogs = "^15.0.1"
+colored-traceback = "^0.3.0"
+pydantic = "^1.10.4"
+python = "^3.9,<3.12"
+
+[tool.poetry.group.dev.dependencies]
+behave = "^1.2.6"
+black = "^22.12.0"
+coverage = "^7.1.0"
+devtools = "^0.10.0"
+isort = "^5.11.4"
+pre-commit = "^3.0.1"
+pylint = "^2.15.10"
+pytest = "^7.2.1"
+pytest-cov = "^4.0.0"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.black]
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+include = '\.pyi?$'
+line-length = 79
+target-version = ['py39', 'py310', 'py311']
+
+[tool.isort]
+line_length = 79
+profile = "black"
+
+[tool.coverage.paths]
+source = ["src"]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["obsidian_to_latex"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+
+[tool.pytest.ini_options]
+addopts = [
+  "-q",
+  "--cov-report=term-missing:skip-covered",
+  "--cov",
+  "--durations=5",
+  "--ignore=acceptance_test",
+  "--cov-fail-under=100",
+]
+testpaths = ["tests"]
+
+[tool.pylint.main]
+recursive = true
+
+[tool.pylint.basic]
+argument-rgx = '^([a-z_][a-z0-9]*)((_([a-z0-9]+|[A-Z0-9]+))*)?$'
+attr-rgx = '^([a-z_][a-z0-9]*)((_([a-z0-9]+|[A-Z0-9]+))*)?$'
+no-docstring-rgx = ""
+variable-rgx = '^([a-z_][a-z0-9]*)((_([a-z0-9]+|[A-Z0-9]+))*)?$'
+
+[tool.pylint.format]
+# black manages line formatting
+max-line-length = 1000
+
+[tool.pylint."messages control"]
+disable = [
+  "raw-checker-failed",
+  "bad-inline-option",
+  "locally-disabled",
+  "file-ignored",
+  "suppressed-message",
+  "useless-suppression",
+  "deprecated-pragma",
+  "use-symbolic-message-instead",
+  "similarities",                 # Flags code in module and test as similar
+  "missing-module-docstring",
+  "too-few-public-methods",       # Disabled to allow pure dataclasses
+  "broad-exception-raised",
+]

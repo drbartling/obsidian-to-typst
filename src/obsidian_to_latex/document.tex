@@ -1,0 +1,102 @@
+\documentclass{article}
+
+% For Reasons?
+\usepackage[utf8]{inputenc}
+
+% For two column layout
+\usepackage{multicol}
+\setlength{\columnsep}{0.5in}
+
+% For code and JSON examples
+\usepackage{xcolor}
+\usepackage{minted}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+
+% Get legal style enumerations (1.1.1. etc.)
+\usepackage{enumitem}
+
+\usepackage{tabularx}
+\newcolumntype{C}{>{\rule[-1.5ex]{0pt}{4.5ex}}c}
+\newcolumntype{L}{>{\rule[-1.5ex]{0pt}{4.5ex}}l}
+\newcolumntype{R}{>{\rule[-1.5ex]{0pt}{4.5ex}}r}
+\newcolumntype{x}{>{\rule[-1.5ex]{0pt}{4.5ex}}X}
+
+\usepackage{pbox}
+
+\usepackage{hyperref} % For clickable links
+\hypersetup{%
+    colorlinks,
+    linkcolor={blue!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\newcommand*\listingautorefname{listing}
+
+% For diagrams
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+\usetikzlibrary{calc}
+\usepackage{framed}
+
+% Captions
+\usepackage[
+font=bf,
+justification=raggedright,
+singlelinecheck=false,
+format=hang,
+hypcap=false
+]{caption}
+
+% References
+\usepackage[
+backref=true,
+isbn=true,
+url=true,
+maxnames=20,
+style=numeric,
+sorting=none,
+]{biblatex}
+\bibliography{references}
+
+% \numberwithin{figure}{section}
+% \numberwithin{table}{section}
+
+% penalty for breaking before last line in par
+\widowpenalty=10000
+% penalty for breaking after first line in par
+\clubpenalty=10000
+\raggedcolumns
+\raggedbottom
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+\setlength{\abovecaptionskip}{-5pt plus 3pt minus 2pt}
+\setlength{\belowcaptionskip}{-5pt plus 3pt minus 2pt}
+\linespread{1}
+
+\setlist{nosep}
+\newlist{legal}{enumerate}{10}
+\setlist[legal]{label*=\arabic*.}
+
+\title{TheTitleOfTheDocument}
+
+% \usemintedstyle{monokai}
+
+% \input{glossary}
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+\begin{document}
+
+\maketitle
+
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{5}
+\tableofcontents
+\newpage
+\input{body.tex}
+% \printglossaries
+% \printbibliography
+
+\end{document}

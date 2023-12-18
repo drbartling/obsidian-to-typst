@@ -1,0 +1,46 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+minimum_pre_commit_version: 2.15.0
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black", "--filter-files"]
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: test
+        name: unit tests
+        description: Run unit tests.
+        entry: poetry run pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: pylint
+        name: pylint
+        entry: poetry run pylint
+        args: [
+            "-rn", # Only display messages
+          ]
+        language: system
+        types: [python]
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v2.40.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
