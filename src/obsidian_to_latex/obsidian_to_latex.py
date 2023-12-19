@@ -61,6 +61,7 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
     subprocess.run(
         [
             "typst",
+            "compile",
             temp_wrapper,
         ],
         check=False,

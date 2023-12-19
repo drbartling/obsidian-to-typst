@@ -222,9 +222,9 @@ def toggle_code_block(
             STATE.mermaid_block = lineno
             lines = [
                 R"",
-                R"\begin{minipage}{\columnwidth}",
-                R"\includegraphics[width=\columnwidth,keepaspectratio]"
-                f"{{{STATE.file[-1].stem}_{STATE.mermaid_block}}}",
+                R"#image(",
+                f'"{STATE.file[-1].stem}_{STATE.mermaid_block}.png",',
+                R"width: 80%)",
             ]
             return "\n".join(lines)
 
@@ -246,9 +246,7 @@ def toggle_code_block(
         assert STATE.temp_dir, STATE.temp_dir
         process_mermaid_diagram()
         STATE.mermaid_block = None
-        lines = [
-            R"\end{minipage}",
-        ]
+        lines = []
     return "\n".join(lines)
 
 
@@ -257,10 +255,10 @@ def process_mermaid_diagram():  # pragma: no cover
     mmd_file: Path = (
         STATE.temp_dir / f"{STATE.file[-1].stem}_{STATE.mermaid_block}.mmd"
     )
-    img_file = mmd_file.with_suffix(".pdf")
+    img_file = mmd_file.with_suffix(".png")
     with open(mmd_file, "w", encoding="UTF-8") as f:
         f.write(STATE.code_buffer)
-    cmd = ["mmdc", "-i", mmd_file, "-o", img_file, "--pdfFit"]
+    cmd = ["mmdc", "--input", mmd_file, "--output", img_file]
     subprocess.run(cmd, shell=True, check=True)
 
 
@@ -288,17 +286,17 @@ def is_numbered_list_item(line: str) -> bool:
 def numbered_list_item(line: str) -> str:
     indent, number, text = re.match(r"(\s*)([0-9])+\.\s+(.*)", line).groups()
     sanitized_text = string_to_tex(text)
-    list_line = R"\item " + sanitized_text
+    list_line = f"enum.item({sanitized_text})"
     if line_depth(indent) > total_depth():
         new_indent = indent.replace(total_indent(), "", 1)
         STATE.list_depth.append(Indent("legal", new_indent))
         start_num = int(number)
-        start_text = "" if start_num == 1 else f"[start={start_num}]"
-        lines = [R"\begin{legal}" + start_text, list_line]
+        start_text = "" if start_num == 1 else f"start: {start_num}"
+        lines = [R"#enum(" + start_text, list_line]
         list_line = "\n".join(lines)
     if line_depth(indent) < total_depth():
         indent = STATE.list_depth.pop()
-        lines = [f"\\end{{{indent.list_type}}}", list_line]
+        lines = [")", list_line]
         list_line = "\n".join(lines)
 
     assert STATE.list_depth, STATE.list_depth
@@ -322,7 +320,7 @@ def bullet_list_item(line: str) -> str:
         list_line = "\n".join(lines)
     if line_depth(indent) < total_depth():
         indent = STATE.list_depth.pop()
-        lines = [f"\\end{{{indent.list_type}}}", list_line]
+        lines = [")", list_line]
         list_line = "\n".join(lines)
 
     assert STATE.list_depth, STATE.list_depth
@@ -366,7 +364,7 @@ def end_lists():
     lines = []
     while STATE.list_depth:
         indent = STATE.list_depth.pop()
-        lines.append(f"\\end{{{indent.list_type}}}")
+        lines.append(")")
     return lines
 
 

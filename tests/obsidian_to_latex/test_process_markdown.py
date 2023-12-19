@@ -112,13 +112,11 @@ obsidian_to_tex_params = [
         ),
         (
             "\n"
-            "We can use mermaid to create nice graphics:\n\n"
-            R"\begin{minipage}{\columnwidth}"
+            "We can use mermaid to create nice graphics:\n"
             "\n"
-            R"\includegraphics[width=\columnwidth,keepaspectratio]"
-            R"{test_file_3}"
-            "\n"
-            R"\end{minipage}"
+            "#image(\n"
+            '"test_file_3.png",\n'
+            "width: 80%)\n"
             "\n"
             "That looks like this:\n"
             R"= A Section Header"
@@ -128,13 +126,13 @@ obsidian_to_tex_params = [
         f"{file_line()} List: Begin and end numbered lists with `legal`",
         ("1. Here's a list\n2. With a second item\n"),
         (
-            R"\begin{legal}"
+            R"#enum("
             "\n"
-            R"\item Here's a list"
+            R"enum.item(Here's a list)"
             "\n"
-            R"\item With a second item"
+            R"enum.item(With a second item)"
             "\n"
-            R"\end{legal}"
+            R")"
         ),
     ),
     (
@@ -147,7 +145,7 @@ obsidian_to_tex_params = [
             "\n"
             R"\item With a second item"
             "\n"
-            R"\end{itemize}"
+            R")"
         ),
     ),
     (
@@ -166,7 +164,7 @@ obsidian_to_tex_params = [
             "\n"
             R"\item With a second item"
             "\n"
-            R"\end{itemize}"
+            R")"
             "\n"
             "See list above."
         ),
@@ -180,7 +178,7 @@ obsidian_to_tex_params = [
             "\n"
             R"\item Here's a list with\_underscores"
             "\n"
-            R"\end{itemize}"
+            R")"
         ),
     ),
     (
@@ -191,40 +189,40 @@ obsidian_to_tex_params = [
         ),
         (
             "We're about to have a list:\n"
-            R"\begin{legal}"
+            R"#enum("
             "\n"
-            R"\item Here's a list with\_underscores"
+            R"enum.item(Here's a list with\_underscores)"
             "\n"
-            R"\end{legal}"
+            R")"
         ),
     ),
     (
         f"{file_line()} List: Prefix underscores with \\ in lists beyond the first item",
         (
             "1. Install the provided license file anywhere on your system\n"
-            "2. Set DECATECH_LICENSE_FILE to the location of your license file\n"
+            "2. Set FOO_LICENSE_FILE to the location of your license file\n"
         ),
         (
-            R"\begin{legal}"
+            R"#enum("
             "\n"
-            R"\item Install the provided license file anywhere on your system"
+            R"enum.item(Install the provided license file anywhere on your system)"
             "\n"
-            R"\item Set DECATECH\_LICENSE\_FILE to the location of your license file"
+            R"enum.item(Set FOO\_LICENSE\_FILE to the location of your license file)"
             "\n"
-            R"\end{legal}"
+            R")"
         ),
     ),
     (
         f"{file_line()} List: Numbered lists can start with a number other than 1",
         ("2. This list startswith 2\n3. And ends with 3\n"),
         (
-            R"\begin{legal}[start=2]"
+            R"#enum(start: 2"
             "\n"
-            R"\item This list startswith 2"
+            R"enum.item(This list startswith 2)"
             "\n"
-            R"\item And ends with 3"
+            R"enum.item(And ends with 3)"
             "\n"
-            R"\end{legal}"
+            R")"
         ),
     ),
     (
@@ -239,9 +237,9 @@ obsidian_to_tex_params = [
             "\n"
             R"\item So deep"
             "\n"
-            R"\end{itemize}"
+            R")"
             "\n"
-            R"\end{itemize}"
+            R")"
         ),
     ),
     (
@@ -256,11 +254,11 @@ obsidian_to_tex_params = [
             "\n"
             R"\item So deep"
             "\n"
-            R"\end{itemize}"
+            R")"
             "\n"
             R"\item And Shallow again"
             "\n"
-            R"\end{itemize}"
+            R")"
         ),
     ),
     (
@@ -269,13 +267,13 @@ obsidian_to_tex_params = [
             "1. This numbered list has depth\n  1. So deep\n2. And Shallow again"
         ),
         (
-            "\\begin{legal}\n"
-            "\\item This numbered list has depth\n"
-            "\\begin{legal}\n"
-            "\\item So deep\n"
-            "\\end{legal}\n"
-            "\\item And Shallow again\n"
-            "\\end{legal}"
+            "#enum(\n"
+            "enum.item(This numbered list has depth)\n"
+            "#enum(\n"
+            "enum.item(So deep)\n"
+            ")\n"
+            "enum.item(And Shallow again)\n"
+            ")"
         ),
     ),
     (
@@ -295,7 +293,7 @@ obsidian_to_tex_params = [
             "\\item Start List\n"
             "\\begin{itemize}\n"
             "\\item Go Deeper\n"
-            "\\end{itemize}\n"
+            ")\n"
             "\\item And back down\n"
             "\\begin{itemize}\n"
             "\\item Go deeper again\n"
@@ -303,14 +301,14 @@ obsidian_to_tex_params = [
             "\\item 2. levels deep\n"
             "\\begin{itemize}\n"
             "\\item 3. levels deep\n"
-            "\\end{itemize}\n"
+            ")\n"
             "\\item back out\n"
             "\\begin{itemize}\n"
             "\\item 3 deep again\n"
-            "\\end{itemize}\n"
-            "\\end{itemize}\n"
-            "\\end{itemize}\n"
-            "\\end{itemize}"
+            ")\n"
+            ")\n"
+            ")\n"
+            ")"
         ),
     ),
     (
