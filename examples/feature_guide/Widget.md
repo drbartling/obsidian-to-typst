@@ -17,3 +17,4 @@ graph
 	widget --> lw[left widgeting]
 	widget --> rw[right widgeting]
 ```
+![[Widgeting]]
