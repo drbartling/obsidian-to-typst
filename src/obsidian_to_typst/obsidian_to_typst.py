@@ -11,7 +11,7 @@ import colored_traceback
 import coloredlogs
 import pydantic
 
-from obsidian_to_latex import obsidian_path, process_markdown
+from obsidian_to_typst import obsidian_path, process_markdown
 
 
 @click.command
@@ -38,21 +38,22 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
         text = f.read()
     title = get_title(text)
     temp_dir = filename.parent / "temp"
+    obsidian_path.TEMP_FOLDER = temp_dir
     temp_dir.mkdir(parents=True, exist_ok=True)
     process_markdown.STATE.temp_dir = temp_dir
     process_markdown.STATE.file.append(filename)
     temp_file = temp_dir / "body.typ"
 
-    latex = process_markdown.obsidian_to_tex(text)
+    typst = process_markdown.obsidian_to_typst(text)
     with open(temp_file, "w", encoding="UTF-8") as f:
-        f.write(latex)
+        f.write(typst)
 
-    latex_wrapper = (
+    typst_wrapper = (
         template if template else Path(__file__).parent / "document.typ"
     )
-    temp_wrapper = temp_dir / latex_wrapper.name
+    temp_wrapper = temp_dir / typst_wrapper.name
 
-    with open(latex_wrapper, "r", encoding="UTF-8") as f:
+    with open(typst_wrapper, "r", encoding="UTF-8") as f:
         wrapper_text = f.read()
     wrapper_text = wrapper_text.replace("TheTitleOfTheDocument", title)
 
@@ -63,6 +64,8 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
             "typst",
             "compile",
             temp_wrapper,
+            "--root",
+            obsidian_path.VAULT_ROOT,
         ],
         check=False,
         capture_output=False,
