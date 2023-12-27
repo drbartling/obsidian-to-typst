@@ -9,6 +9,11 @@ from pydantic.dataclasses import dataclass
 
 from obsidian_to_typst import obsidian_path
 
+_logger = logging.getLogger(__name__)
+
+referenced_docs = set()
+docs_embedded = set()
+
 
 @dataclass
 class Indent:
@@ -18,7 +23,7 @@ class Indent:
 
 @dataclass
 class State:
-    depth: int
+    heading_depth: int
     code_block: Optional[int]
     code_buffer: str
     mermaid_block: Optional[int]
@@ -29,7 +34,7 @@ class State:
     @classmethod
     def new(cls):
         return cls(
-            depth=1,
+            heading_depth=0,
             code_block=None,
             code_buffer="",
             mermaid_block=None,
@@ -38,8 +43,22 @@ class State:
             typst_block=None,
         )
 
+    def init(self, temp_dir: Path, file: Path):
+        self.heading_depth = 0
+        self.code_block = None
+        self.code_buffer = ""
+        self.mermaid_block = None
+        self.file = [file]
+        self.temp_dir = temp_dir
+        self.typst_block = None
+
 
 STATE: State = State.new()
+
+
+@pydantic.validate_arguments
+def init_state(temp_dir: Path, file: Path) -> None:
+    STATE.init(temp_dir, file)
 
 
 @pydantic.validate_arguments
@@ -99,14 +118,15 @@ def line_to_section(line: str) -> str:
         6: "=====",
     }
     s, line = re.match(r"(#*)\s*(.*)", line).groups()
-    STATE.depth = len(s)
+    STATE.heading_depth = len(s)
 
-    if STATE.depth not in section_lookup:
-        return ""
-    section_text = section_lookup[STATE.depth]
+    if STATE.heading_depth not in section_lookup:
+        return line + "\n\n"
 
     line = string_to_typst(line)
-    return f"{section_text} {line}"
+    section_text = f"#heading(level:{STATE.heading_depth - 1})[{line}]"
+
+    return section_text
 
 
 @pydantic.validate_arguments
@@ -144,17 +164,19 @@ def embed_markdown(embed_line: str) -> str:
     lines = text.splitlines()
     for i, line in enumerate(lines):
         if line.startswith("#"):
-            lines[i] = "#" * (STATE.depth - 1) + line
+            lines[i] = "#" * (STATE.heading_depth - 1) + line
     text = "\n".join(lines)
 
     STATE.file.append(file)
-    current_depth = STATE.depth
+    current_depth = STATE.heading_depth
     try:
         result = obsidian_to_typst(text)
     finally:
         STATE.file.pop()
-        STATE.depth = current_depth
+        STATE.heading_depth = current_depth
 
+    ref_label = file_ref_label(file)
+    docs_embedded.add(ref_label)
     return file_label(file) + result
 
 
@@ -215,7 +237,7 @@ def toggle_code_block(
         if "typst" == lang:
             STATE.code_block = lineno
             STATE.typst_block = lineno
-            lines = []
+            lines = ["#fit(["]
             return "\n".join(lines)
 
         STATE.code_block = lineno
@@ -234,7 +256,7 @@ def toggle_code_block(
     if STATE.typst_block:
         STATE.code_block = None
         STATE.typst_block = None
-        lines = []
+        lines = ["])"]
 
     if STATE.code_block:
         STATE.code_block = None
@@ -260,9 +282,36 @@ def process_mermaid_diagram():  # pragma: no cover
     )
     img_file = mmd_file.with_suffix(".png")
     with open(mmd_file, "w", encoding="UTF-8") as f:
+        f.write(
+            "\n".join(
+                [
+                    "---",
+                    "config:",
+                    "    htmlLabels: false",
+                    "---",
+                    "",
+                ]
+            )
+        )
         f.write(STATE.code_buffer)
-    cmd = ["mmdc", "--input", mmd_file, "--output", img_file]
-    subprocess.run(cmd, shell=True, check=True)
+    cmd = [
+        "mmdc",
+        "--input",
+        mmd_file,
+        "--output",
+        img_file,
+        "--scale",  # scale up png image to render better in the final PDF
+        "3",  # This is a workaround for https://github.com/typst/typst/issues/1421
+    ]
+    try:
+        subprocess.run(cmd, shell=True, check=True)
+    except subprocess.CalledProcessError:
+        _logger.error(
+            "Failed to generate MMD diagram for `%s` with command `%s`.",
+            STATE.file[-1],
+            " ".join([str(c) for c in cmd]),
+        )
+        raise
 
 
 @pydantic.validate_arguments
@@ -276,8 +325,13 @@ def cleanup():
         not STATE.code_block
     ), f"Reached end of file without closing code block from line {STATE.code_block}"
     lines = [""]
-
-    return "\n".join(lines)
+    if len(STATE.file) == 1:
+        undefined_refs = [
+            ref for ref in referenced_docs if ref not in docs_embedded
+        ]
+        for ref in undefined_refs:
+            lines.append(f"<{ref}>")
+    return "\n\n.".join(lines)
 
 
 @pydantic.validate_arguments
@@ -289,14 +343,30 @@ def string_to_typst(unprocessed_text: str) -> str:
     while unprocessed_text:
         char = unprocessed_text[0]
         unprocessed_text = unprocessed_text[1:]
-        processed_text += sanitize_special_characters(char)
+        if char == "`":
+            pt, unprocessed_text = split_verbatim(unprocessed_text)
+            processed_text += pt
+        elif char == "*":
+            pt, unprocessed_text = split_formatted(unprocessed_text)
+            processed_text += pt
+        elif char == "[":
+            pt, unprocessed_text = split_link(unprocessed_text)
+            processed_text += pt
+        elif char == "^":
+            pt, unprocessed_text = split_reference(unprocessed_text)
+            processed_text += pt
+        elif char == "\\":
+            pt, unprocessed_text = split_escaped_text(unprocessed_text)
+            processed_text += pt
+        else:
+            processed_text += sanitize_special_characters(char)
 
     return processed_text
 
 
 @pydantic.validate_arguments
 def split_verbatim(text: str) -> Tuple[str, str]:
-    processed_text = R"\verb`"
+    processed_text = R"`"
     verb_text, unprocessed_text = re.match(r"(.*?`)(.*)", text).groups()
     processed_text += verb_text
     return processed_text, unprocessed_text
@@ -310,24 +380,24 @@ def split_formatted(text: str) -> Tuple[str, str]:
 
 
 def split_bold(text: str) -> Tuple[str, str]:
-    processed_text = R"\textbf{"
+    processed_text = R"*"
     bold_text, unprocessed_text = re.match(
         r"\*(.*?\**)\*\*(.*)", text
     ).groups()
 
     bold_text = string_to_typst(bold_text)
     processed_text += bold_text
-    processed_text += R"}"
+    processed_text += R"*"
     return processed_text, unprocessed_text
 
 
 def split_italics(text: str) -> Tuple[str, str]:
-    processed_text = R"\textit{"
+    processed_text = R"_"
     italic_text, unprocessed_text = re.match(r"(.*?)\*(.*)", text).groups()
 
     italic_text = string_to_typst(italic_text)
     processed_text += italic_text
-    processed_text += R"}"
+    processed_text += R"_"
     return processed_text, unprocessed_text
 
 
@@ -365,10 +435,11 @@ def split_document_link(text: str) -> Optional[Tuple[str, str]]:
     doc_name, disp_text = m.groups()
 
     doc_ref = file_ref_label(obsidian_path.find_file(doc_name + ".md"))
+    referenced_docs.add(doc_ref)
     disp_text = (
         sanitize_special_characters(disp_text) if disp_text else doc_name
     )
-    processed_text = f"\\hyperref[{doc_ref}]{{{disp_text}}}"
+    processed_text = f"#link(<{doc_ref}>)[{disp_text}]"
     return processed_text, unprocessed_text
 
 
@@ -379,7 +450,7 @@ def split_paragraph_link(text: str) -> Optional[Tuple[str, str]]:
         return None
     link, disp_text, unprocessed_text = m.groups()
     disp_text = sanitize_special_characters(disp_text)
-    processed_text = f"\\hyperref[{link}]{{{disp_text}}}"
+    processed_text = f"#link(<{link}>)[{disp_text}]"
     return processed_text, unprocessed_text
 
 
@@ -387,16 +458,23 @@ def split_paragraph_link(text: str) -> Optional[Tuple[str, str]]:
 def split_reference(text: str) -> Tuple[str, str]:
     m = re.match(r"([a-zA-Z0-9-]+)$", text)
     if not m:
-        return R"\textasciicircum{}", text
+        return R"^", text
     ref_text = m.groups()[0]
-    return f"\\label{{{ref_text}}}", ""
+    return f"<{ref_text}>", ""
+
+
+@pydantic.validate_arguments
+def split_escaped_text(text: str) -> Tuple[str, str]:
+    escaped_text = "\\" + text[0]
+    unprocessed_text = text[1:]
+    return escaped_text, unprocessed_text
 
 
 @pydantic.validate_arguments
 def file_label(file_path: Path) -> str:
-    return f'#label("{file_ref_label(file_path)}")'
+    return f"<{file_ref_label(file_path)}>"
 
 
 @pydantic.validate_arguments
 def file_ref_label(file_path: Path) -> str:
-    return "file_" + file_path.name.replace(".", "_")
+    return "file_" + file_path.name.lower().replace(".", "_").replace(" ", "_")
