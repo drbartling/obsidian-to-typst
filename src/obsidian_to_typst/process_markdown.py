@@ -186,7 +186,7 @@ def is_image(line: str) -> bool:
     if not m:
         return False
     file_name = m.group(1)
-    return Path(file_name).suffix.lower() in [".png", ".bmp"]
+    return Path(file_name).suffix.lower() in [".png", ".bmp", ".svg"]
 
 
 @pydantic.validate_arguments
@@ -229,7 +229,7 @@ def toggle_code_block(
             lines = [
                 R"",
                 R"#image(",
-                f'"{STATE.file[-1].stem}_{STATE.mermaid_block}.png",',
+                f'"{STATE.file[-1].stem}_{STATE.mermaid_block}.svg",',
                 R"width: 80%)",
             ]
             return "\n".join(lines)
@@ -280,28 +280,17 @@ def process_mermaid_diagram():  # pragma: no cover
     mmd_file: Path = (
         STATE.temp_dir / f"{STATE.file[-1].stem}_{STATE.mermaid_block}.mmd"
     )
-    img_file = mmd_file.with_suffix(".png")
+    pdf_file = mmd_file.with_suffix(".pdf")
+    img_file = mmd_file.with_suffix(".svg")
     with open(mmd_file, "w", encoding="UTF-8") as f:
-        f.write(
-            "\n".join(
-                [
-                    "---",
-                    "config:",
-                    "    htmlLabels: false",
-                    "---",
-                    "",
-                ]
-            )
-        )
         f.write(STATE.code_buffer)
     cmd = [
         "mmdc",
         "--input",
         mmd_file,
         "--output",
-        img_file,
-        "--scale",  # scale up png image to render better in the final PDF
-        "3",  # This is a workaround for https://github.com/typst/typst/issues/1421
+        pdf_file,
+        "--pdfFit",
     ]
     try:
         subprocess.run(cmd, shell=True, check=True)
@@ -309,7 +298,46 @@ def process_mermaid_diagram():  # pragma: no cover
         _logger.error(
             "Failed to generate MMD diagram for `%s` with command `%s`.",
             STATE.file[-1],
-            " ".join([str(c) for c in cmd]),
+            " ".join(
+                [f'"{c}"' if isinstance(c, Path) else str(c) for c in cmd]
+            ),
+        )
+        raise
+    cmd = [
+        "mutool",
+        "draw",
+        "-o",
+        img_file,
+        pdf_file,
+    ]
+    _logger.info(
+        "Calling `%s`",
+        " ".join([f'"{c}"' if isinstance(c, Path) else str(c) for c in cmd]),
+    )
+    try:
+        subprocess.run(cmd, shell=True, check=True)
+    except subprocess.CalledProcessError:
+        _logger.error(
+            "Failed to generate svg file from pdf with command `%s`",
+            " ".join(cmd),
+        )
+        raise
+    temp_img_file = img_file.with_name(img_file.stem + "1" + ".svg")
+    cmd = [
+        "mv",
+        temp_img_file,
+        img_file,
+    ]
+    _logger.info(
+        "Calling `%s`",
+        " ".join([f'"{c}"' if isinstance(c, Path) else str(c) for c in cmd]),
+    )
+    try:
+        subprocess.run(cmd, shell=True, check=True)
+    except subprocess.CalledProcessError:
+        _logger.error(
+            "Failed to move mermaid image with command `%s`",
+            " ".join(cmd),
         )
         raise
 
@@ -331,10 +359,10 @@ def cleanup():
         ]
         for ref in undefined_refs:
             lines.append(f"<{ref}>")
+            _logger.warning(f"Undefined ref %s", ref)
     return "\n\n.".join(lines)
 
 
-@pydantic.validate_arguments
 @pydantic.validate_arguments
 def string_to_typst(unprocessed_text: str) -> str:
     logging.getLogger(__name__).debug("unprocessed_text %s", unprocessed_text)

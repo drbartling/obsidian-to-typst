@@ -1,4 +1,13 @@
 #set document(title:[TheTitleOfTheDocument], date:auto)
+#let title = "TheTitleOfTheDocument"
+#let doc_date = datetime.today().display()
+
+#set page(
+    header: align(
+        right + horizon,
+        title
+    ),
+)
 
 #let fit(body) = {
     layout(container_size => {
@@ -15,5 +24,13 @@
 }
 
 #show link: underline
+
+#align(center, text(17pt)[
+    *#title*
+])
+#align(center, [
+    #doc_date
+])
 #outline(depth:1)
+// #show: rest => columns(2, rest)
 #set heading(numbering:"1.")
