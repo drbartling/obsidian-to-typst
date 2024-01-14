@@ -66,6 +66,7 @@ def obsidian_to_typst(input_text: str) -> str:
     lines = input_text.splitlines()
     lines = [_line_to_typst(i + 1, line) for i, line in enumerate(lines)]
     lines = [line for line in lines if line is not None]
+    lines.append("")
     text = "\n".join(lines)
     text = text + cleanup()
     return text
