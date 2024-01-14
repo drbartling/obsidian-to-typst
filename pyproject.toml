@@ -16,7 +16,7 @@ colorama = "^0.4.6"
 coloredlogs = "^15.0.1"
 colored-traceback = "^0.3.0"
 pydantic = "^2.5.3"
-python = "^3.9,<3.12"
+python = "^3.9,<3.13"
 
 [tool.poetry.group.dev.dependencies]
 behave = "^1.2.6"
