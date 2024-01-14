@@ -20,14 +20,14 @@ python = "^3.9,<3.13"
 
 [tool.poetry.group.dev.dependencies]
 behave = "^1.2.6"
-black = "^22.12.0"
-coverage = "^7.1.0"
-devtools = "^0.10.0"
-isort = "^5.11.4"
-pre-commit = "^3.0.1"
-pylint = "^2.15.10"
-pytest = "^7.2.1"
-pytest-cov = "^4.0.0"
+black = "^23.12.1"
+coverage = "^7.4.0"
+devtools = "^0.12.2"
+isort = "^5.13.2"
+pre-commit = "^3.6.0"
+pylint = "^3.0.3"
+pytest = "^7.4.4"
+pytest-cov = "^4.1.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -48,7 +48,7 @@ exclude = '''
 '''
 include = '\.pyi?$'
 line-length = 79
-target-version = ['py39', 'py310', 'py311']
+target-version = ['py39', 'py310', 'py311', 'py312']
 
 [tool.isort]
 line_length = 79
