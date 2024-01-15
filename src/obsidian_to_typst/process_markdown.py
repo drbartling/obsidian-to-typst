@@ -320,27 +320,11 @@ def process_mermaid_diagram():  # pragma: no cover
     except subprocess.CalledProcessError:
         _logger.error(
             "Failed to generate svg file from pdf with command `%s`",
-            " ".join(cmd),
+            " ".join([str(c) for c in cmd]),
         )
         raise
     temp_img_file = img_file.with_name(img_file.stem + "1" + ".svg")
-    cmd = [
-        "mv",
-        temp_img_file,
-        img_file,
-    ]
-    _logger.info(
-        "Calling `%s`",
-        " ".join([f'"{c}"' if isinstance(c, Path) else str(c) for c in cmd]),
-    )
-    try:
-        subprocess.run(cmd, shell=True, check=True)
-    except subprocess.CalledProcessError:
-        _logger.error(
-            "Failed to move mermaid image with command `%s`",
-            " ".join(cmd),
-        )
-        raise
+    temp_img_file.replace(img_file)
 
 
 @pydantic.validate_arguments
@@ -360,7 +344,7 @@ def cleanup():
         ]
         for ref in undefined_refs:
             lines.append(f"<{ref}>")
-            _logger.warning(f"Undefined ref %s", ref)
+            _logger.warning("Undefined ref %s", ref)
     return "\n\n.".join(lines)
 
 

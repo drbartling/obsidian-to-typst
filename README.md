@@ -6,6 +6,7 @@ This utility attempts to make it easy to convert markdown documents written usin
 
 - typst
 - mermaid
+- mutool
 
 ## Getting Started
 
