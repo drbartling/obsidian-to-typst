@@ -2,13 +2,13 @@
 authors = ["Ryan Bartling <ryan.bartling@gmail.com>"]
 description = "Convert Obsidian vault documents to typst and pdfs"
 license = "MIT"
-name = "obsidian_to_typst"
+name = "obsidian-to-typst"
 readme = "README.md"
 repository = "https://github.com/drbartling/obsidian-to-typst"
-version = "0.1.0"
+version = "0.1.1"
 
 [tool.poetry.scripts]
-obsidian_to_typst = "obsidian_to_typst.obsidian_to_typst:main"
+obsidian-to-typst = "obsidian_to_typst.obsidian_to_typst:main"
 
 [tool.poetry.dependencies]
 click = "^8.1.7"
