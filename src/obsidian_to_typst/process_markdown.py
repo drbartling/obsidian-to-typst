@@ -56,12 +56,12 @@ class State:
 STATE: State = State.new()
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def init_state(temp_dir: Path, file: Path) -> None:
     STATE.init(temp_dir, file)
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def obsidian_to_typst(input_text: str) -> str:
     lines = input_text.splitlines()
     lines = [_line_to_typst(i + 1, line) for i, line in enumerate(lines)]
@@ -72,7 +72,7 @@ def obsidian_to_typst(input_text: str) -> str:
     return text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def _line_to_typst(
     lineno: int,
     line: str,
@@ -86,7 +86,7 @@ def _line_to_typst(
         raise
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def line_to_typst(
     lineno: int,
     line: str,
@@ -108,7 +108,7 @@ def line_to_typst(
     return line
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def line_to_section(line: str) -> str:
     assert line.startswith("#"), line
     section_lookup = {
@@ -130,28 +130,30 @@ def line_to_section(line: str) -> str:
     return section_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def is_embedded(line: str) -> bool:
-    return line.startswith("![[") and line.endswith("]]")
+    stripped = line.strip()
+    return stripped.startswith("![[") and stripped.endswith("]]")
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def embed_file(line: str) -> str:
-    if is_markdown(line):
-        return embed_markdown(line)
-    if is_image(line):
-        return embed_image(line)
-    raise Exception(f"Unable to embed {line}")  # pragma: no cover
+    stripped = line.strip()
+    if is_markdown(stripped):
+        return embed_markdown(stripped)
+    if is_image(stripped):
+        return embed_image(stripped)
+    raise Exception(f"Unable to embed {stripped}")  # pragma: no cover
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def is_markdown(line: str) -> bool:
     m = re.match(r"!\[\[(.*)]]", line)
     file_name = m.group(1)
     return Path(file_name).suffix == ""
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def embed_markdown(embed_line: str) -> str:
     m = re.match(r"!\[\[(.*)]]", embed_line)
     file_name = m.group(1)
@@ -181,16 +183,16 @@ def embed_markdown(embed_line: str) -> str:
     return file_label(file) + result
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def is_image(line: str) -> bool:
     m = re.match(r"!\[\[([\s_a-zA-Z0-9.]*)(\|)?([0-9x]+)?]]", line)
     if not m:
         return False
     file_name = m.group(1)
-    return Path(file_name).suffix.lower() in [".png", ".bmp", ".svg"]
+    return Path(file_name).suffix.lower() in [".jpg", ".png", ".bmp", ".svg"]
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def embed_image(line: str) -> str:
     assert is_image(line), line
     m = re.match(r"!\[\[([\s_a-zA-Z0-9.]*)\|?([0-9]+)?x?([0-9]+)?]]", line)
@@ -200,23 +202,23 @@ def embed_image(line: str) -> str:
     return include_image(obsidian_path.find_file(file_name), width, height)
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def include_image(
     image_path: Path, width: Optional[int], height: Optional[int]
 ) -> str:
     width_text = R"80%" if width is None else f"{int(width/2)}pt"
     height_text = "" if height is None else f"height:{int(height/2)}pt,"
 
-    image_path = obsidian_path.rel_path(image_path)
+    image_path = obsidian_path.root_path(image_path)
     return f'#image("{image_path}",width:{width_text},{height_text})'
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def is_code_block_toggle(line: str) -> bool:
     return re.match(r"\s*```", line) is not None
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def toggle_code_block(
     lineno: int,
     line: str,
@@ -273,7 +275,7 @@ def toggle_code_block(
     return "\n".join(lines)
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def process_mermaid_diagram():  # pragma: no cover
     assert STATE.temp_dir, STATE.temp_dir
     assert STATE.mermaid_block, STATE.mermaid_block
@@ -327,12 +329,12 @@ def process_mermaid_diagram():  # pragma: no cover
     temp_img_file.replace(img_file)
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def sanitize_special_characters(line: str) -> str:
     return re.sub(r"([&$#%{}])(?!.*`)", r"\\\1", line)
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def cleanup():
     assert (
         not STATE.code_block
@@ -348,7 +350,7 @@ def cleanup():
     return "\n\n.".join(lines)
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def string_to_typst(unprocessed_text: str) -> str:
     logging.getLogger(__name__).debug("unprocessed_text %s", unprocessed_text)
     processed_text = ""
@@ -377,7 +379,7 @@ def string_to_typst(unprocessed_text: str) -> str:
     return processed_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_verbatim(text: str) -> Tuple[str, str]:
     processed_text = R"`"
     verb_text, unprocessed_text = re.match(r"(.*?`)(.*)", text).groups()
@@ -385,7 +387,7 @@ def split_verbatim(text: str) -> Tuple[str, str]:
     return processed_text, unprocessed_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_formatted(text: str) -> Tuple[str, str]:
     if text.startswith("*"):
         return split_bold(text)
@@ -414,7 +416,7 @@ def split_italics(text: str) -> Tuple[str, str]:
     return processed_text, unprocessed_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_link(text: str) -> Tuple[str, str]:
     return (
         split_markdown_link(text)
@@ -424,7 +426,7 @@ def split_link(text: str) -> Tuple[str, str]:
     )
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_markdown_link(text: str) -> Optional[Tuple[str, str]]:
     m = re.match(r"(.*?)]\((.*?)\)(.*)", text)
     if not m:
@@ -435,7 +437,7 @@ def split_markdown_link(text: str) -> Optional[Tuple[str, str]]:
     return processed_text, unprocessed_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_document_link(text: str) -> Optional[Tuple[str, str]]:
     m = re.match(r"\[(.+?)]](.*)", text)
     if not m:
@@ -456,7 +458,7 @@ def split_document_link(text: str) -> Optional[Tuple[str, str]]:
     return processed_text, unprocessed_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_paragraph_link(text: str) -> Optional[Tuple[str, str]]:
     m = re.match(r"\[#\^([a-zA-Z0-9-]+)\|?(.+)]](.*)", text)
     if not m:
@@ -467,7 +469,7 @@ def split_paragraph_link(text: str) -> Optional[Tuple[str, str]]:
     return processed_text, unprocessed_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_reference(text: str) -> Tuple[str, str]:
     m = re.match(r"([a-zA-Z0-9-]+)$", text)
     if not m:
@@ -476,18 +478,18 @@ def split_reference(text: str) -> Tuple[str, str]:
     return f"<{ref_text}>", ""
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def split_escaped_text(text: str) -> Tuple[str, str]:
     escaped_text = "\\" + text[0]
     unprocessed_text = text[1:]
     return escaped_text, unprocessed_text
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def file_label(file_path: Path) -> str:
     return f"<{file_ref_label(file_path)}>"
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def file_ref_label(file_path: Path) -> str:
     return "file_" + file_path.name.lower().replace(".", "_").replace(" ", "_")

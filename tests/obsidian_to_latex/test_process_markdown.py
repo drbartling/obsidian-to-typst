@@ -1,9 +1,11 @@
 import inspect
 from pathlib import Path
-import pytest
-import devtools
-from obsidian_to_typst import process_markdown
 from unittest import mock
+
+import devtools
+import pytest
+
+from obsidian_to_typst import process_markdown
 
 
 def file_line() -> str:
@@ -20,17 +22,21 @@ def setup_teardown():
     yield
     process_markdown.STATE = process_markdown.State.new()
 
+
 obsidian_to_tex_params = [
     (
         f"{file_line()} Empty File",
-        (
-            "\n"
-        ),
-        (
-            "\n"
-        ),
+        ("\n"),
+        ("\n"),
+    ),
+    (
+        f"{file_line()} Document Title",
+        ("# My Document\n"),
+        ("\n"),
     ),
 ]
+
+
 @pytest.mark.parametrize(
     "test_name, input_text, expected", obsidian_to_tex_params
 )

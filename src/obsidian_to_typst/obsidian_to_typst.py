@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
     "--template",
     type=click.Path(path_type=Path, resolve_path=True),
 )
-@pydantic.validate_arguments
+@pydantic.validate_call
 def main(filename: Path, template: Optional[Path]):  # pragma: no cover
     colorama.init()
     colored_traceback.add_hook()
@@ -38,7 +38,7 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
         raise
 
 
-@pydantic.validate_arguments
+@pydantic.validate_call
 def app_main(filename: Path, template: Optional[Path]):  # pragma: no cover
     obsidian_path.VAULT_ROOT = get_vault_root(filename)
 
