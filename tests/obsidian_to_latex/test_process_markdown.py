@@ -32,7 +32,7 @@ obsidian_to_tex_params = [
     (
         f"{file_line()} Document Title",
         ("# My Document\n"),
-        ("\n"),
+        ("My Document\n\n\n"),
     ),
 ]
 
