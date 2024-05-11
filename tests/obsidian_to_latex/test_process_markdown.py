@@ -55,3 +55,31 @@ def test_obsidian_to_tex(test_name, input_text, expected):
     devtools.debug(result)
     devtools.debug(expected)
     assert result == expected, result
+
+
+split_embedded_doc_params = [
+    (
+        "![[foo.jpg]]",
+        (
+            '#image("/foo.jpg",width:80%,)',
+            "",
+        ),
+    ),
+    (
+        "![[foo.jpg]] and more text",
+        (
+            '#image("/foo.jpg",width:80%,)',
+            " and more text",
+        ),
+    ),
+]
+
+
+@pytest.mark.parametrize("input_text, expected", split_embedded_doc_params)
+def test_split_embedded_doc(input_text, expected):
+    with mock.patch(
+        "obsidian_to_typst.process_markdown.obsidian_path.find_file"
+    ) as p:
+        p.return_value = Path("foo.jpg").resolve()
+        result = process_markdown.split_embedded_doc(input_text)
+    assert expected == result

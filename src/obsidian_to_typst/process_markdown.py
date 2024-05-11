@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import devtools
 import pydantic
 from pydantic.dataclasses import dataclass
 
@@ -14,6 +13,8 @@ _logger = logging.getLogger(__name__)
 
 referenced_docs = set()
 docs_embedded = set()
+
+embedded_image_regex = r"!\[\[([\s_a-zA-Z0-9.]*)\|?([0-9]+)?x?([0-9]+)?]]"
 
 
 @dataclass
@@ -186,7 +187,7 @@ def embed_markdown(embed_line: str) -> str:
 
 @pydantic.validate_call
 def is_image(line: str) -> bool:
-    m = re.match(r"!\[\[([\s_a-zA-Z0-9.]*)(\|)?([0-9x]+)?]]", line)
+    m = re.match(embedded_image_regex, line)
     if not m:
         return False
     file_name = m.group(1)
@@ -196,7 +197,7 @@ def is_image(line: str) -> bool:
 @pydantic.validate_call
 def embed_image(line: str) -> str:
     assert is_image(line), line
-    m = re.match(r"!\[\[([\s_a-zA-Z0-9.]*)\|?([0-9]+)?x?([0-9]+)?]]", line)
+    m = re.match(embedded_image_regex, line)
     if not m:  # pragma: no cover
         raise Exception(line)
     file_name, width, height = m.groups()
@@ -331,26 +332,37 @@ def string_to_typst(unprocessed_text: str) -> str:
     logging.getLogger(__name__).debug("unprocessed_text %s", unprocessed_text)
     processed_text = ""
 
-    while unprocessed_text:
-        char = unprocessed_text[0]
-        unprocessed_text = unprocessed_text[1:]
-        if char == "`":
-            pt, unprocessed_text = split_verbatim(unprocessed_text)
-            processed_text += pt
-        elif char == "*":
-            pt, unprocessed_text = split_formatted(unprocessed_text)
-            processed_text += pt
-        elif char == "[":
-            pt, unprocessed_text = split_link(unprocessed_text)
-            processed_text += pt
-        elif char == "^":
-            pt, unprocessed_text = split_reference(unprocessed_text)
-            processed_text += pt
-        elif char == "\\":
-            pt, unprocessed_text = split_escaped_text(unprocessed_text)
-            processed_text += pt
-        else:
-            processed_text += sanitize_special_characters(char)
+    try:
+        while unprocessed_text:
+            char = unprocessed_text[0]
+            unprocessed_text = unprocessed_text[1:]
+            if char == "`":
+                pt, unprocessed_text = split_verbatim(unprocessed_text)
+                processed_text += pt
+            elif char == "*":
+                pt, unprocessed_text = split_formatted(unprocessed_text)
+                processed_text += pt
+            elif char == "[":
+                pt, unprocessed_text = split_link(unprocessed_text)
+                processed_text += pt
+            elif char == "^":
+                pt, unprocessed_text = split_reference(unprocessed_text)
+                processed_text += pt
+            elif char == "\\":
+                pt, unprocessed_text = split_escaped_text(unprocessed_text)
+                processed_text += pt
+            elif char == "!":
+                pt, unprocessed_text = split_embedded_doc(
+                    char + unprocessed_text
+                )
+                processed_text += pt
+            else:
+                processed_text += sanitize_special_characters(char)
+    except Exception:
+        logging.getLogger(__name__).error(
+            "Failed to parse `%s`", unprocessed_text
+        )
+        raise
 
     return processed_text
 
@@ -459,6 +471,16 @@ def split_escaped_text(text: str) -> Tuple[str, str]:
     escaped_text = "\\" + text[0]
     unprocessed_text = text[1:]
     return escaped_text, unprocessed_text
+
+
+@pydantic.validate_call
+def split_embedded_doc(text: str) -> tuple((str, str)):
+    if is_image(text):
+        image_splitter = embedded_image_regex + r"(.*)"
+        m = re.match(image_splitter, text)
+        unprocessed_text = m.groups()[-1]
+        return embed_image(text), unprocessed_text
+    return "!", ""
 
 
 @pydantic.validate_call
