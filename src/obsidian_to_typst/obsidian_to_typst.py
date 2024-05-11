@@ -43,8 +43,9 @@ def app_main(filename: Path, template: Optional[Path]):  # pragma: no cover
     obsidian_path.VAULT_ROOT = get_vault_root(filename)
 
     # pylint: disable=protected-access
-    with open(filename, "r", encoding="UTF-8") as f:
+    with filename.open(mode="r", encoding="utf-8") as f:
         text = f.read()
+
     title = get_title(text)
     temp_dir = filename.parent / "temp"
     obsidian_path.TEMP_FOLDER = temp_dir

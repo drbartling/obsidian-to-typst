@@ -19,5 +19,5 @@ Run `poetry install` and `poetry shell` to install and and activate the python v
 Than, run `obsidian_to_typst .\examples\feature_guide\Widget.md` to convert the example document to a PDF.  The PDF will be placed in `.\examples\feature_guide\output\Widget.pdf`.
 
 ```powershell
-watchexec.exe -crd500 -e py "isort . && black . && pytest && obsidian_to_typst.cmd .\examples\feature_guide\Widget.md"
+watchexec --clear --restart --debounce 500 --exts py "isort . && black . && pytest && obsidian-to-typst ./examples/feature_guide/Widget.md"
 ```

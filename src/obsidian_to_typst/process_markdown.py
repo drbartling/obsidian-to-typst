@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+import devtools
 import pydantic
 from pydantic.dataclasses import dataclass
 
@@ -206,8 +207,8 @@ def embed_image(line: str) -> str:
 def include_image(
     image_path: Path, width: Optional[int], height: Optional[int]
 ) -> str:
-    width_text = R"80%" if width is None else f"{int(width/2)}pt"
-    height_text = "" if height is None else f"height:{int(height/2)}pt,"
+    width_text = R"80%" if width is None else f"{int(width / 2)}pt"
+    height_text = "" if height is None else f"height:{int(height / 2)}pt,"
 
     image_path = obsidian_path.root_path(image_path)
     return f'#image("{image_path}",width:{width_text},{height_text})'
@@ -232,7 +233,7 @@ def toggle_code_block(
             lines = [
                 R"",
                 R"#image(",
-                f'"{STATE.file[-1].stem}_{STATE.mermaid_block}.svg",',
+                f'"{STATE.file[-1].stem}_{STATE.mermaid_block}.png",',
                 R"width: 80%)",
             ]
             return "\n".join(lines)
@@ -283,50 +284,25 @@ def process_mermaid_diagram():  # pragma: no cover
     mmd_file: Path = (
         STATE.temp_dir / f"{STATE.file[-1].stem}_{STATE.mermaid_block}.mmd"
     )
-    pdf_file = mmd_file.with_suffix(".pdf")
-    img_file = mmd_file.with_suffix(".svg")
+    img_file = mmd_file.with_suffix(".png")
     with open(mmd_file, "w", encoding="UTF-8") as f:
         f.write(STATE.code_buffer)
-    cmd = [
-        "mmdc",
-        "--input",
-        mmd_file,
-        "--output",
-        pdf_file,
-        "--pdfFit",
-    ]
+    cmd_str = (
+        "mmdc "
+        f"--input {mmd_file} "
+        f"--output {img_file} "
+        "--backgroundColor transparent "
+        "--scale 4 "
+    )
     try:
-        subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(cmd_str, shell=True, check=True)
     except subprocess.CalledProcessError:
         _logger.error(
             "Failed to generate MMD diagram for `%s` with command `%s`.",
             STATE.file[-1],
-            " ".join(
-                [f'"{c}"' if isinstance(c, Path) else str(c) for c in cmd]
-            ),
+            cmd_str,
         )
         raise
-    cmd = [
-        "mutool",
-        "draw",
-        "-o",
-        img_file,
-        pdf_file,
-    ]
-    _logger.info(
-        "Calling `%s`",
-        " ".join([f'"{c}"' if isinstance(c, Path) else str(c) for c in cmd]),
-    )
-    try:
-        subprocess.run(cmd, shell=True, check=True)
-    except subprocess.CalledProcessError:
-        _logger.error(
-            "Failed to generate svg file from pdf with command `%s`",
-            " ".join([str(c) for c in cmd]),
-        )
-        raise
-    temp_img_file = img_file.with_name(img_file.stem + "1" + ".svg")
-    temp_img_file.replace(img_file)
 
 
 @pydantic.validate_call

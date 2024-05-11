@@ -34,6 +34,11 @@ obsidian_to_tex_params = [
         ("# My Document\n"),
         ("My Document\n\n\n"),
     ),
+    (
+        f"{file_line()} Hello world",
+        ("Hello, World!\n"),
+        ("Hello, World!\n"),
+    ),
 ]
 
 
