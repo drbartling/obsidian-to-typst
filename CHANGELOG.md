@@ -1,5 +1,11 @@
 # Obsidian to typst changelog
 
+## 0.1.2
+
+### Features
+
+1. Allow embedding images within a line
+
 ## 0.1.0
 
 ### New Features
