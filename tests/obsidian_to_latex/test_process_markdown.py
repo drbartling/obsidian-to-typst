@@ -5,7 +5,7 @@ from unittest import mock
 import devtools
 import pytest
 
-from obsidian_to_typst import process_markdown
+from obsidian_to_typst import obsidian_path, process_markdown
 
 
 def file_line() -> str:
@@ -19,8 +19,10 @@ def setup_teardown():
     process_markdown.STATE.file.append(test_file)
     temp_dir = test_file.parent / "temp"
     process_markdown.STATE.temp_dir = temp_dir
+    obsidian_path.VAULT_ROOT = Path(".").resolve()
     yield
     process_markdown.STATE = process_markdown.State.new()
+    obsidian_path.VAULT_ROOT = None
 
 
 obsidian_to_tex_params = [
@@ -80,6 +82,6 @@ def test_split_embedded_doc(input_text, expected):
     with mock.patch(
         "obsidian_to_typst.process_markdown.obsidian_path.find_file"
     ) as p:
-        p.return_value = Path("foo.jpg").resolve()
+        p.return_value = Path(obsidian_path.VAULT_ROOT / "foo.jpg")
         result = process_markdown.split_embedded_doc(input_text)
     assert expected == result

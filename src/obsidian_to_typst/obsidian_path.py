@@ -1,5 +1,5 @@
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Optional
 
 VAULT_ROOT: Optional[Path] = None
@@ -21,10 +21,9 @@ def find_file(file_name: str) -> Path:  # pragma: no cover
 
 
 def rel_path(path: Path) -> Path:
-    return PurePosixPath(Path(os.path.relpath(path, TEMP_FOLDER)))
+    return Path(os.path.relpath(path, TEMP_FOLDER))
 
 
 def root_path(path: Path) -> Path:
-    return PurePosixPath(
-        Path(os.path.abspath("/") + os.path.relpath(path, VAULT_ROOT))
-    )
+    path = path.resolve()
+    return Path(os.path.abspath("/") + os.path.relpath(path, VAULT_ROOT))

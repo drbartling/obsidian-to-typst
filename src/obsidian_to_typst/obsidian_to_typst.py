@@ -33,13 +33,14 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
     coloredlogs.install(level="INFO")
     try:
         app_main(filename, template)
-    except Exception as e:
+    except Exception as _e:
         logger.critical("Failed to export document to PDF using typst")
         raise
 
 
 @pydantic.validate_call
 def app_main(filename: Path, template: Optional[Path]):  # pragma: no cover
+    # pylint: disable=too-many-locals
     obsidian_path.VAULT_ROOT = get_vault_root(filename)
 
     # pylint: disable=protected-access
@@ -77,7 +78,7 @@ def app_main(filename: Path, template: Optional[Path]):  # pragma: no cover
         "--root",
         obsidian_path.VAULT_ROOT,
     ]
-    logging.info(f"Running `{' '.join([str(a) for a in args])}`")
+    logging.info("Running `%s`", " ".join([str(a) for a in args]))
     try:
         typst_result = subprocess.run(
             args,

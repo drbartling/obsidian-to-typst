@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 referenced_docs = set()
 docs_embedded = set()
 
-embedded_image_regex = r"!\[\[([\s_a-zA-Z0-9.]*)\|?([0-9]+)?x?([0-9]+)?]]"
+EMBEDDED_IMAGE_REGEX = r"!\[\[([\s_a-zA-Z0-9.]*)\|?([0-9]+)?x?([0-9]+)?]]"
 
 
 @dataclass
@@ -187,7 +187,7 @@ def embed_markdown(embed_line: str) -> str:
 
 @pydantic.validate_call
 def is_image(line: str) -> bool:
-    m = re.match(embedded_image_regex, line)
+    m = re.match(EMBEDDED_IMAGE_REGEX, line)
     if not m:
         return False
     file_name = m.group(1)
@@ -197,11 +197,15 @@ def is_image(line: str) -> bool:
 @pydantic.validate_call
 def embed_image(line: str) -> str:
     assert is_image(line), line
-    m = re.match(embedded_image_regex, line)
+    m = re.match(EMBEDDED_IMAGE_REGEX, line)
     if not m:  # pragma: no cover
         raise Exception(line)
     file_name, width, height = m.groups()
-    return include_image(obsidian_path.find_file(file_name), width, height)
+    return include_image(
+        obsidian_path.find_file(file_name),
+        width,
+        height,
+    )
 
 
 @pydantic.validate_call
@@ -476,7 +480,7 @@ def split_escaped_text(text: str) -> Tuple[str, str]:
 @pydantic.validate_call
 def split_embedded_doc(text: str) -> tuple((str, str)):
     if is_image(text):
-        image_splitter = embedded_image_regex + r"(.*)"
+        image_splitter = EMBEDDED_IMAGE_REGEX + r"(.*)"
         m = re.match(image_splitter, text)
         unprocessed_text = m.groups()[-1]
         return embed_image(text), unprocessed_text
