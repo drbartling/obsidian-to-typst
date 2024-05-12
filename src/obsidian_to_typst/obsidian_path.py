@@ -24,6 +24,6 @@ def rel_path(path: Path) -> Path:
     return Path(os.path.relpath(path, TEMP_FOLDER))
 
 
-def root_path(path: Path) -> Path:
+def root_path(path: Path) -> str:
     path = path.resolve()
-    return Path(os.path.abspath("/") + os.path.relpath(path, VAULT_ROOT))
+    return os.path.sep + os.path.relpath(path, VAULT_ROOT)
