@@ -1,5 +1,11 @@
 # Obsidian to typst changelog
 
+## 0.1.3
+
+### Fixes
+
+1. Fix issue with building mermaid docs when run as root (as in a Docker container)
+
 ## 0.1.2
 
 ### Features

@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -300,6 +301,7 @@ def process_mermaid_diagram():  # pragma: no cover
         "--backgroundColor transparent "
         "--scale 4 "
     )
+    cmd_str += root_check()
     try:
         subprocess.run(cmd_str, shell=True, check=True)
     except subprocess.CalledProcessError:
@@ -309,6 +311,15 @@ def process_mermaid_diagram():  # pragma: no cover
             cmd_str,
         )
         raise
+
+
+def root_check():
+    if os.geteuid() == 0:
+        config_file = obsidian_path.TEMP_FOLDER / "pup.json"
+        with open(config_file, "w", encoding="UTF-8") as f:
+            f.write('{"args": ["--no-sandbox"]}')
+        return f' --puppeteerConfigFile "{config_file}" '
+    return ""
 
 
 @pydantic.validate_call
