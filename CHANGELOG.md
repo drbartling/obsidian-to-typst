@@ -6,6 +6,10 @@
 
 1. Allow embedding images within a line
 
+### Fixes
+
+1. Code lines starting with `#` are not modified
+
 ## 0.1.0
 
 ### New Features

@@ -25,7 +25,9 @@ class Indent:
 
 @dataclass
 class State:
+    # pylint: disable=too-many-instance-attributes
     heading_depth: int
+    parent_heading_depth: int
     code_block: Optional[int]
     code_buffer: str
     mermaid_block: Optional[int]
@@ -37,6 +39,7 @@ class State:
     def new(cls):
         return cls(
             heading_depth=0,
+            parent_heading_depth=0,
             code_block=None,
             code_buffer="",
             mermaid_block=None,
@@ -47,6 +50,7 @@ class State:
 
     def init(self, temp_dir: Path, file: Path):
         self.heading_depth = 0
+        self.parent_heading_depth = 0
         self.code_block = None
         self.code_buffer = ""
         self.mermaid_block = None
@@ -121,7 +125,7 @@ def line_to_section(line: str) -> str:
         6: "=====",
     }
     s, line = re.match(r"(#*)\s*(.*)", line).groups()
-    STATE.heading_depth = len(s)
+    STATE.heading_depth = len(s) + STATE.parent_heading_depth
 
     if STATE.heading_depth not in section_lookup:
         return line + "\n\n"
@@ -166,19 +170,16 @@ def embed_markdown(embed_line: str) -> str:
 
     with open(file, "r", encoding="UTF-8") as f:
         text = f.read()
-    lines = text.splitlines()
-    for i, line in enumerate(lines):
-        if line.startswith("#"):
-            lines[i] = "#" * (STATE.heading_depth - 1) + line
-    text = "\n".join(lines)
 
     STATE.file.append(file)
-    current_depth = STATE.heading_depth
+    current_parent_depth = STATE.parent_heading_depth
+    STATE.parent_heading_depth = STATE.heading_depth - 1
     try:
         result = obsidian_to_typst(text)
     finally:
         STATE.file.pop()
-        STATE.heading_depth = current_depth
+        STATE.heading_depth = STATE.parent_heading_depth + 1
+        STATE.parent_heading_depth = current_parent_depth
 
     ref_label = file_ref_label(file)
     docs_embedded.add(ref_label)
@@ -294,8 +295,8 @@ def process_mermaid_diagram():  # pragma: no cover
         f.write(STATE.code_buffer)
     cmd_str = (
         "mmdc "
-        f"--input {mmd_file} "
-        f"--output {img_file} "
+        f"--input '{mmd_file}' "
+        f"--output '{img_file}' "
         "--backgroundColor transparent "
         "--scale 4 "
     )
