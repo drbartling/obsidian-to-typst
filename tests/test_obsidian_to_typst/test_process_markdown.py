@@ -13,13 +13,13 @@ def file_line() -> str:
 
 
 @pytest.fixture(autouse=True)
-def setup_teardown():
+def setup_teardown() -> None:
     process_markdown.STATE = process_markdown.State.new()
     test_file = Path.cwd() / "temp/test_file.md"
     process_markdown.STATE.file.append(test_file)
     temp_dir = test_file.parent / "temp"
     process_markdown.STATE.temp_dir = temp_dir
-    obsidian_path.VAULT_ROOT = Path(".").resolve()
+    obsidian_path.VAULT_ROOT = Path.cwd()
     yield
     process_markdown.STATE = process_markdown.State.new()
     obsidian_path.VAULT_ROOT = None
@@ -45,9 +45,11 @@ obsidian_to_tex_params = [
 
 
 @pytest.mark.parametrize(
-    "test_name, input_text, expected", obsidian_to_tex_params
+    ("test_name", "input_text", "expected"), obsidian_to_tex_params
 )
-def test_obsidian_to_tex(test_name, input_text, expected):
+def test_obsidian_to_tex(
+    test_name: str, input_text: str, expected: str
+) -> None:
     with mock.patch(
         "obsidian_to_typst.process_markdown.process_mermaid_diagram"
     ):
@@ -77,8 +79,8 @@ split_embedded_doc_params = [
 ]
 
 
-@pytest.mark.parametrize("input_text, expected", split_embedded_doc_params)
-def test_split_embedded_doc(input_text, expected):
+@pytest.mark.parametrize(("input_text", "expected"), split_embedded_doc_params)
+def test_split_embedded_doc(input_text: str, expected: tuple) -> None:
     with mock.patch(
         "obsidian_to_typst.process_markdown.obsidian_path.find_file"
     ) as p:

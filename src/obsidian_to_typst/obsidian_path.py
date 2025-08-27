@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
-from typing import Optional
 
-VAULT_ROOT: Optional[Path] = None
-TEMP_FOLDER: Optional[Path] = None
+VAULT_ROOT: Path | None = None
+TEMP_FOLDER: Path | None = None
 
 
 def format_path(path: Path) -> str:
@@ -15,9 +14,8 @@ def find_file(file_name: str) -> Path:  # pragma: no cover
         if file_name in files:
             full_path: Path = Path(root) / file_name
             return full_path
-    raise FileNotFoundError(
-        f"Unable to locate `{file_name}` under `{VAULT_ROOT}`"
-    )
+    msg = f"Unable to locate `{file_name}` under `{VAULT_ROOT}`"
+    raise FileNotFoundError(msg)
 
 
 def rel_path(path: Path) -> Path:

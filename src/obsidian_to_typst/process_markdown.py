@@ -3,7 +3,6 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import pydantic
 from pydantic.dataclasses import dataclass
@@ -29,15 +28,15 @@ class State:
     # pylint: disable=too-many-instance-attributes
     heading_depth: int
     parent_heading_depth: int
-    code_block: Optional[int]
+    code_block: int | None
     code_buffer: str
-    mermaid_block: Optional[int]
-    file: List[Path]
-    temp_dir: Optional[Path]
-    typst_block: Optional[int]
+    mermaid_block: int | None
+    file: list[Path]
+    temp_dir: Path | None
+    typst_block: int | None
 
     @classmethod
-    def new(cls):
+    def new(cls) -> "State":
         return cls(
             heading_depth=0,
             parent_heading_depth=0,
@@ -49,7 +48,7 @@ class State:
             typst_block=None,
         )
 
-    def init(self, temp_dir: Path, file: Path):
+    def init(self, temp_dir: Path, file: Path) -> None:
         self.heading_depth = 0
         self.parent_heading_depth = 0
         self.code_block = None
@@ -75,8 +74,7 @@ def obsidian_to_typst(input_text: str) -> str:
     lines = [line for line in lines if line is not None]
     lines.append("")
     text = "\n".join(lines)
-    text = text + cleanup()
-    return text
+    return text + cleanup()
 
 
 @pydantic.validate_call
@@ -97,7 +95,7 @@ def _line_to_typst(
 def line_to_typst(
     lineno: int,
     line: str,
-) -> Optional[str]:
+) -> str | None:
     # pylint: disable=too-many-return-statements
 
     if is_code_block_toggle(line):
@@ -111,8 +109,7 @@ def line_to_typst(
         return embed_file(line)
     if line.startswith("#"):
         return line_to_section(line)
-    line = string_to_typst(line)
-    return line
+    return string_to_typst(line)
 
 
 @pydantic.validate_call
@@ -132,9 +129,7 @@ def line_to_section(line: str) -> str:
         return line + "\n\n"
 
     line = string_to_typst(line)
-    section_text = f"#heading(level:{STATE.heading_depth - 1})[{line}]"
-
-    return section_text
+    return f"#heading(level:{STATE.heading_depth - 1})[{line}]"
 
 
 @pydantic.validate_call
@@ -150,7 +145,8 @@ def embed_file(line: str) -> str:
         return embed_markdown(stripped)
     if is_image(stripped):
         return embed_image(stripped)
-    raise Exception(f"Unable to embed {stripped}")  # pragma: no cover
+    msg = f"Unable to embed {stripped}"
+    raise Exception(msg)  # noqa: TRY002
 
 
 @pydantic.validate_call
@@ -169,7 +165,7 @@ def embed_markdown(embed_line: str) -> str:
     file_name = file_name + ".md"
     file = obsidian_path.find_file(file_name)
 
-    with open(file, "r", encoding="UTF-8") as f:
+    with file.open(encoding="UTF-8") as f:
         text = f.read()
 
     STATE.file.append(file)
@@ -200,8 +196,7 @@ def is_image(line: str) -> bool:
 def embed_image(line: str) -> str:
     assert is_image(line), line
     m = re.match(EMBEDDED_IMAGE_REGEX, line)
-    if not m:  # pragma: no cover
-        raise Exception(line)
+    assert m, f"{line}"
     file_name, width, height = m.groups()
     return include_image(
         obsidian_path.find_file(file_name),
@@ -212,7 +207,7 @@ def embed_image(line: str) -> str:
 
 @pydantic.validate_call
 def include_image(
-    image_path: Path, width: Optional[int], height: Optional[int]
+    image_path: Path, width: int | None, height: int | None
 ) -> str:
     width_text = R"80%" if width is None else f"{int(width / 2)}pt"
     height_text = "" if height is None else f"height:{int(height / 2)}pt,"
@@ -284,7 +279,7 @@ def toggle_code_block(
 
 
 @pydantic.validate_call
-def process_mermaid_diagram():  # pragma: no cover
+def process_mermaid_diagram() -> None:  # pragma: no cover
     assert STATE.temp_dir, STATE.temp_dir
     assert STATE.mermaid_block, STATE.mermaid_block
     assert STATE.file, STATE.file
@@ -292,7 +287,7 @@ def process_mermaid_diagram():  # pragma: no cover
         STATE.temp_dir / f"{STATE.file[-1].stem}_{STATE.mermaid_block}.mmd"
     )
     img_file = mmd_file.with_suffix(".png")
-    with open(mmd_file, "w", encoding="UTF-8") as f:
+    with mmd_file.open("w", encoding="UTF-8") as f:
         f.write(STATE.code_buffer)
     cmd_str = (
         "mmdc "
@@ -303,7 +298,7 @@ def process_mermaid_diagram():  # pragma: no cover
     )
     cmd_str += root_check()
     try:
-        subprocess.run(cmd_str, shell=True, check=True)
+        subprocess.run(cmd_str, shell=True, check=True)  # noqa: S602
     except subprocess.CalledProcessError:
         _logger.error(
             "Failed to generate MMD diagram for `%s` with command `%s`.",
@@ -313,10 +308,10 @@ def process_mermaid_diagram():  # pragma: no cover
         raise
 
 
-def root_check():
+def root_check() -> str:
     if os.geteuid() == 0:
         config_file = obsidian_path.TEMP_FOLDER / "pup.json"
-        with open(config_file, "w", encoding="UTF-8") as f:
+        with config_file.open("w", encoding="UTF-8") as f:
             f.write('{"args": ["--no-sandbox"]}')
         return f' --puppeteerConfigFile "{config_file}" '
     return ""
@@ -328,10 +323,10 @@ def sanitize_special_characters(line: str) -> str:
 
 
 @pydantic.validate_call
-def cleanup():
-    assert (
-        not STATE.code_block
-    ), f"Reached end of file without closing code block from line {STATE.code_block}"
+def cleanup() -> str:
+    assert not STATE.code_block, (
+        f"Reached end of file without closing code block from line {STATE.code_block}"
+    )
     lines = [""]
     if len(STATE.file) == 1:
         undefined_refs = [
@@ -384,7 +379,7 @@ def string_to_typst(unprocessed_text: str) -> str:
 
 
 @pydantic.validate_call
-def split_verbatim(text: str) -> Tuple[str, str]:
+def split_verbatim(text: str) -> tuple[str, str]:
     processed_text = R"`"
     verb_text, unprocessed_text = re.match(r"(.*?`)(.*)", text).groups()
     processed_text += verb_text
@@ -392,17 +387,15 @@ def split_verbatim(text: str) -> Tuple[str, str]:
 
 
 @pydantic.validate_call
-def split_formatted(text: str) -> Tuple[str, str]:
+def split_formatted(text: str) -> tuple[str, str]:
     if text.startswith("*"):
         return split_bold(text)
     return split_italics(text)
 
 
-def split_bold(text: str) -> Tuple[str, str]:
+def split_bold(text: str) -> tuple[str, str]:
     processed_text = R"*"
-    bold_text, unprocessed_text = re.match(
-        r"\*(.*?\**)\*\*(.*)", text
-    ).groups()
+    bold_text, unprocessed_text = re.match(r"\*(.*?\**)\*\*(.*)", text).groups()
 
     bold_text = string_to_typst(bold_text)
     processed_text += bold_text
@@ -410,7 +403,7 @@ def split_bold(text: str) -> Tuple[str, str]:
     return processed_text, unprocessed_text
 
 
-def split_italics(text: str) -> Tuple[str, str]:
+def split_italics(text: str) -> tuple[str, str]:
     processed_text = R"_"
     italic_text, unprocessed_text = re.match(r"(.*?)\*(.*)", text).groups()
 
@@ -421,7 +414,7 @@ def split_italics(text: str) -> Tuple[str, str]:
 
 
 @pydantic.validate_call
-def split_link(text: str) -> Tuple[str, str]:
+def split_link(text: str) -> tuple[str, str]:
     return (
         split_markdown_link(text)
         or split_document_link(text)
@@ -431,7 +424,7 @@ def split_link(text: str) -> Tuple[str, str]:
 
 
 @pydantic.validate_call
-def split_markdown_link(text: str) -> Optional[Tuple[str, str]]:
+def split_markdown_link(text: str) -> tuple[str, str] | None:
     m = re.match(r"(.*?)]\((.*?)\)(.*)", text)
     if not m:
         return None
@@ -442,7 +435,7 @@ def split_markdown_link(text: str) -> Optional[Tuple[str, str]]:
 
 
 @pydantic.validate_call
-def split_document_link(text: str) -> Optional[Tuple[str, str]]:
+def split_document_link(text: str) -> tuple[str, str] | None:
     m = re.match(r"\[(.+?)]](.*)", text)
     if not m:
         return None
@@ -463,7 +456,7 @@ def split_document_link(text: str) -> Optional[Tuple[str, str]]:
 
 
 @pydantic.validate_call
-def split_paragraph_link(text: str) -> Optional[Tuple[str, str]]:
+def split_paragraph_link(text: str) -> tuple[str, str] | None:
     m = re.match(r"\[#\^([a-zA-Z0-9-]+)\|?(.+)]](.*)", text)
     if not m:
         return None
@@ -474,7 +467,7 @@ def split_paragraph_link(text: str) -> Optional[Tuple[str, str]]:
 
 
 @pydantic.validate_call
-def split_reference(text: str) -> Tuple[str, str]:
+def split_reference(text: str) -> tuple[str, str]:
     m = re.match(r"([a-zA-Z0-9-]+)$", text)
     if not m:
         return R"^", text
@@ -483,14 +476,14 @@ def split_reference(text: str) -> Tuple[str, str]:
 
 
 @pydantic.validate_call
-def split_escaped_text(text: str) -> Tuple[str, str]:
+def split_escaped_text(text: str) -> tuple[str, str]:
     escaped_text = "\\" + text[0]
     unprocessed_text = text[1:]
     return escaped_text, unprocessed_text
 
 
 @pydantic.validate_call
-def split_embedded_doc(text: str) -> tuple((str, str)):
+def split_embedded_doc(text: str) -> (str, str):
     if is_image(text):
         image_splitter = EMBEDDED_IMAGE_REGEX + r"(.*)"
         m = re.match(image_splitter, text)
