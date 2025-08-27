@@ -1,106 +1,108 @@
-[tool.poetry]
-authors = ["Ryan Bartling <ryan.bartling@gmail.com>"]
+[project]
+authors = [{ name = "Ryan Bartling", email = "ryan.bartling@gmail.com" }]
 description = "Convert Obsidian vault documents to typst and pdfs"
 license = "MIT"
 name = "obsidian-to-typst"
 readme = "README.md"
-repository = "https://github.com/drbartling/obsidian-to-typst"
+requires-python = ">=3.11,<3.14"
 version = "0.2.0"
+dependencies = [
+    "click>=8.2.1",
+    "colorama >=0.4.6",
+    "coloredlogs >=15.0.1",
+    "colored-traceback >=0.3.0",
+    "pydantic >=2.7.1",
+]
 
-[tool.poetry.scripts]
+[project.urls]
+repository = "https://github.com/drbartling/obsidian-to-typst"
+
+[project.scripts]
 obsidian-to-typst = "obsidian_to_typst.obsidian_to_typst:main"
 
-[tool.poetry.dependencies]
-python = "^3.9,<3.13"
-click = "^8.1.7"
-colorama = "^0.4.6"
-coloredlogs = "^15.0.1"
-colored-traceback = "^0.3.0"
-pydantic = "^2.7.1"
-
-[tool.poetry.group.dev.dependencies]
-behave = "^1.2.6"
-black = "^24.4.2"
-coverage = "^7.5.1"
-devtools = "^0.12.2"
-isort = "^5.13.2"
-pre-commit = "^3.7.0"
-pylint = "^3.1.0"
-pytest = "^8.2.0"
-pytest-cov = "^5.0.0"
-
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core"]
-
-[tool.black]
-exclude = '''
-/(
-    \.git
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
-include = '\.pyi?$'
-line-length = 79
-target-version = ['py39', 'py310', 'py311']
-
-[tool.isort]
-line_length = 79
-profile = "black"
+[dependency-groups]
+dev = [
+    "behave >=1.2.6",
+    "black >=24.4.2",
+    "coverage >=7.5.1",
+    "devtools >=0.12.2",
+    "isort >=5.13.2",
+    "pre-commit >=3.7.0",
+    "pylint >=3.1.0",
+    "pytest >=8.2.0",
+    "pytest-cov >=5.0.0",
+    "ruff>=0.12.10",
+]
 
 [tool.coverage.paths]
 source = ["src"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
 
 [tool.coverage.run]
 branch = true
 parallel = true
 source = ["obsidian_to_typst"]
 
-[tool.coverage.report]
-precision = 2
-show_missing = true
+[tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+line-length = 80
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.isort]
+line_length = 80
+profile = "black"
 
 [tool.pytest.ini_options]
 addopts = [
     "-q",
     "--cov-report=term-missing:skip-covered",
+    "--cov",
     "--durations=5",
     "--ignore=acceptance_test",
-    "--cov-fail-under=100",
 ]
 testpaths = ["tests"]
 
-[tool.pylint.main]
-recursive = true
-
-[tool.pylint.basic]
-argument-rgx = '^([a-z_][a-z0-9]*)((_([a-z0-9]+|[A-Z0-9]+))*)?$'
-attr-rgx = '^([a-z_][a-z0-9]*)((_([a-z0-9]+|[A-Z0-9]+))*)?$'
-no-docstring-rgx = ""
-variable-rgx = '^([a-z_][a-z0-9]*)((_([a-z0-9]+|[A-Z0-9]+))*)?$'
-
-[tool.pylint.format]
-# black manages line formatting
-max-line-length = 1000
-
-[tool.pylint."messages control"]
-disable = [
-    "raw-checker-failed",
-    "bad-inline-option",
-    "locally-disabled",
-    "file-ignored",
-    "suppressed-message",
-    "useless-suppression",
-    "deprecated-pragma",
-    "use-symbolic-message-instead",
-    "similarities",                 # Flags code in module and test as similar
-    "missing-module-docstring",
-    "too-few-public-methods",       # Disabled to allow pure dataclasses
-    "broad-exception-raised",
-]
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling>=1.0.0"]

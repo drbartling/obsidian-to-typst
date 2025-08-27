@@ -27,16 +27,13 @@ repos:
       - id: test
         name: unit tests
         description: Run unit tests.
-        entry: poetry run pytest
+        entry: uv run pytest
         language: system
         types: [python]
         pass_filenames: false
       - id: pylint
         name: pylint
-        entry: poetry run pylint
-        args: [
-            "-rn", # Only display messages
-          ]
+        entry: uv run ruff check
         language: system
         types: [python]
   - repo: https://github.com/commitizen-tools/commitizen
