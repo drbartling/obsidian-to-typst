@@ -5,7 +5,7 @@ license = "MIT"
 name = "obsidian-to-typst"
 readme = "README.md"
 repository = "https://github.com/drbartling/obsidian-to-typst"
-version = "0.1.3"
+version = "0.2.0"
 
 [tool.poetry.scripts]
 obsidian-to-typst = "obsidian_to_typst.obsidian_to_typst:main"
@@ -68,11 +68,11 @@ show_missing = true
 
 [tool.pytest.ini_options]
 addopts = [
-  "-q",
-  "--cov-report=term-missing:skip-covered",
-  "--durations=5",
-  "--ignore=acceptance_test",
-  "--cov-fail-under=100",
+    "-q",
+    "--cov-report=term-missing:skip-covered",
+    "--durations=5",
+    "--ignore=acceptance_test",
+    "--cov-fail-under=100",
 ]
 testpaths = ["tests"]
 
@@ -91,16 +91,16 @@ max-line-length = 1000
 
 [tool.pylint."messages control"]
 disable = [
-  "raw-checker-failed",
-  "bad-inline-option",
-  "locally-disabled",
-  "file-ignored",
-  "suppressed-message",
-  "useless-suppression",
-  "deprecated-pragma",
-  "use-symbolic-message-instead",
-  "similarities",                 # Flags code in module and test as similar
-  "missing-module-docstring",
-  "too-few-public-methods",       # Disabled to allow pure dataclasses
-  "broad-exception-raised",
+    "raw-checker-failed",
+    "bad-inline-option",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "useless-suppression",
+    "deprecated-pragma",
+    "use-symbolic-message-instead",
+    "similarities",                 # Flags code in module and test as similar
+    "missing-module-docstring",
+    "too-few-public-methods",       # Disabled to allow pure dataclasses
+    "broad-exception-raised",
 ]
