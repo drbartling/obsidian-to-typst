@@ -1,11 +1,11 @@
 [project]
-authors = [{ name = "Ryan Bartling", email = "ryan.bartling@gmail.com" }]
+authors = [{name = "Ryan Bartling", email = "ryan.bartling@gmail.com"}]
 description = "Convert Obsidian vault documents to typst and pdfs"
 license = "MIT"
 name = "obsidian-to-typst"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
     "click>=8.2.1",
     "colorama >=0.4.6",

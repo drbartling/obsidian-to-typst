@@ -3,7 +3,6 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 import click
 import colorama
@@ -17,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.command
+@click.version_option()
 @click.argument(
     "filename",
     type=click.Path(path_type=Path, resolve_path=True),
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
     type=click.Path(path_type=Path, resolve_path=True),
 )
 @pydantic.validate_call
-def main(filename: Path, template: Optional[Path]):  # pragma: no cover
+def main(filename: Path, template: Path | None):  # pragma: no cover
     colorama.init()
     colored_traceback.add_hook()
     coloredlogs.install(level="INFO")
@@ -39,7 +39,7 @@ def main(filename: Path, template: Optional[Path]):  # pragma: no cover
 
 
 @pydantic.validate_call
-def app_main(filename: Path, template: Optional[Path]):  # pragma: no cover
+def app_main(filename: Path, template: Path | None):  # pragma: no cover
     # pylint: disable=too-many-locals
     obsidian_path.VAULT_ROOT = get_vault_root(filename)
 
@@ -63,7 +63,7 @@ def app_main(filename: Path, template: Optional[Path]):  # pragma: no cover
     )
     temp_wrapper = temp_dir / typst_wrapper.name
 
-    with open(typst_wrapper, "r", encoding="UTF-8") as f:
+    with open(typst_wrapper, encoding="UTF-8") as f:
         wrapper_text = f.read()
     wrapper_text = wrapper_text.replace("TheTitleOfTheDocument", title)
     wrapper_text += typst
