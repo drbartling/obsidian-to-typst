@@ -25,6 +25,7 @@ exclude = [
     "build",
     "dist",
     "node_modules",
+    "requirements",
     "site-packages",
     "venv",
 ]
@@ -40,9 +41,9 @@ ignore = [
     "D",  # https://docs.astral.sh/ruff/rules/#pydoclint-doc
     "E501",  # https://docs.astral.sh/ruff/rules/line-too-long/
     "FBT001",  # https://docs.astral.sh/ruff/rules/boolean-type-hint-positional-argument/
+    "N818",  # https://docs.astral.sh/ruff/rules/error-suffix-on-exception-name/
     "S101",  # https://docs.astral.sh/ruff/rules/assert/
     "SIM300",  # https://docs.astral.sh/ruff/rules/yoda-conditions/
-    "N818",  # https://docs.astral.sh/ruff/rules/error-suffix-on-exception-name/
     "TRY400",  # https://docs.astral.sh/ruff/rules/error-instead-of-exception/
 ]
 fixable = ["ALL"]

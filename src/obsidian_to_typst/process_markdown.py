@@ -457,7 +457,28 @@ def split_document_link(text: str) -> tuple[str, str] | None:
 
 @pydantic.validate_call
 def split_paragraph_link(text: str) -> tuple[str, str] | None:
-    m = re.match(r"\[#\^([a-zA-Z0-9-]+)\|?(.+)]](.*)", text)
+    """
+    >>> text = ""
+    >>> split_paragraph_link(text) is None
+    True
+
+    # >>> text = "[#^foo|bar]] and more text to [[#^follow]]"
+    # >>> split_paragraph_link(text)
+    # ('#link(<foo>)[bar]', ' and more text to [[#^follow]]')
+
+    >>> text = "[#^foo]] and more text to [[#^follow]]"
+    >>> split_paragraph_link(text)
+    ('#link(<foo>)[foo]', ' and more text to [[#^follow]]')
+    """
+
+    m = re.match(r"\[#\^([a-zA-Z0-9-]+)]](.*)", text)
+    if m:
+        link, unprocessed_text = m.groups()
+        disp_text = sanitize_special_characters(link)
+        processed_text = f"#link(<{link}>)[{disp_text}]"
+        return processed_text, unprocessed_text
+
+    m = re.match(r"\[#\^([a-zA-Z0-9-]+)\|?(.+?)]](.*)", text)
     if not m:
         return None
     link, disp_text, unprocessed_text = m.groups()
@@ -468,6 +489,9 @@ def split_paragraph_link(text: str) -> tuple[str, str] | None:
 
 @pydantic.validate_call
 def split_reference(text: str) -> tuple[str, str]:
+    """
+    text = "
+    """
     m = re.match(r"([a-zA-Z0-9-]+)$", text)
     if not m:
         return R"^", text
