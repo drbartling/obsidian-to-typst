@@ -25,7 +25,7 @@ graph
 ![[Widgeting]]
 
 ```typst
-#import "@preview/cetz:0.1.2"
+#import "@preview/cetz:0.4.1"
 
 #cetz.canvas({
   import cetz.draw: *
@@ -39,7 +39,7 @@ graph
     let segment(from, to) = {
       merge-path(close: true, {
         line((0, 0), (rel: (360deg * from, 1)))
-        arc((), start: from * 360deg, stop: to * 360deg, radius: 1)
+        line((0, 0), (360deg * from, 1))
       })
     }
 
@@ -73,12 +73,12 @@ graph
 
   // Draw annotations
   line("chart.red", ((), "-|", (2, 0)))
-  content((), [Red], anchor: "left")
+  content((), [Red], anchor: "west")
 
   line("chart.blue", (1, -1), ((), "-|", (2,0)))
-  content((), [Blue], anchor: "left")
+  content((), [Blue], anchor: "west")
 
   line("chart.green", ((), "-|", (2,0)))
-  content((), [Green], anchor: "left")
+  content((), [Green], anchor: "west")
 })
 ```
