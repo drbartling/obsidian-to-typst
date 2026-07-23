@@ -24,4 +24,6 @@ def rel_path(path: Path) -> Path:
 
 def root_path(path: Path) -> str:
     path = path.resolve()
-    return os.path.sep + os.path.relpath(path, VAULT_ROOT)
+    root = VAULT_ROOT.resolve()
+    rel_path = os.path.relpath(path, root)
+    return "/" + format_path(Path(rel_path))
