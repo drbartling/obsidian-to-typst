@@ -10,13 +10,13 @@ This utility attempts to make it easy to convert markdown documents written usin
 
 ## Getting Started
 
-This project uses python [poetry](https://python-poetry.org/).  Follow the [intallation instructions](https://python-poetry.org/docs/#installation) for poetry.
+This project uses [uv](https://docs.astral.sh/uv/) to manage its python environment. Follow the [installation instructions](https://docs.astral.sh/uv/getting-started/installation/) for uv.
 
 Install typst using a package manager or `cargo install`
 
-Run `poetry install` and `poetry shell` to install and and activate the python virtual environment.
+Run `uv sync` to install and set up the python virtual environment.
 
-Than, run `obsidian_to_typst .\examples\feature_guide\Widget.md` to convert the example document to a PDF.  The PDF will be placed in `.\examples\feature_guide\output\Widget.pdf`.
+Than, run `uv run obsidian_to_typst .\examples\feature_guide\Widget.md` to convert the example document to a PDF.  The PDF will be placed in `.\examples\feature_guide\output\Widget.pdf`.
 
 ```powershell
 watchexec --clear=clear --exts py "uv run ruff format && uv run ruff check --fix && uv run pytest && uv run obsidian-to-typst ./examples/feature_guide/Widget.md"
