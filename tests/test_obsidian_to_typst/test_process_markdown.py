@@ -1,4 +1,5 @@
 import inspect
+import re
 from pathlib import Path
 from unittest import mock
 
@@ -76,14 +77,44 @@ split_embedded_doc_params = [
             " and more text",
         ),
     ),
+    (
+        "![[foo.pdf]]",
+        (
+            '#image("/foo.pdf",width:80%,)',
+            "",
+        ),
+    ),
+    (
+        "![[foo.pdf]] and more text",
+        (
+            '#image("/foo.pdf",width:80%,)',
+            " and more text",
+        ),
+    ),
 ]
 
 
 @pytest.mark.parametrize(("input_text", "expected"), split_embedded_doc_params)
 def test_split_embedded_doc(input_text: str, expected: tuple) -> None:
+    file_name = re.match(r"!\[\[(.*?)]]", input_text).group(1)
     with mock.patch(
         "obsidian_to_typst.process_markdown.obsidian_path.find_file"
     ) as p:
-        p.return_value = Path(obsidian_path.VAULT_ROOT / "foo.jpg")
+        p.return_value = Path(obsidian_path.VAULT_ROOT / file_name)
         result = process_markdown.split_embedded_doc(input_text)
     assert expected == result
+
+
+is_image_params = [
+    ("![[foo.jpg]]", True),
+    ("![[foo.png]]", True),
+    ("![[foo.bmp]]", True),
+    ("![[foo.svg]]", True),
+    ("![[foo.pdf]]", True),
+    ("![[foo.md]]", False),
+]
+
+
+@pytest.mark.parametrize(("input_text", "expected"), is_image_params)
+def test_is_image(input_text: str, expected: bool) -> None:
+    assert process_markdown.is_image(input_text) == expected

@@ -4,7 +4,7 @@ This utility attempts to make it easy to convert markdown documents written usin
 
 ## Requirements
 
-- typst
+- typst (>=0.14.0, needed for embedding PDFs as images)
 - mermaid
 - mutool
 

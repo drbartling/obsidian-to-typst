@@ -1,5 +1,11 @@
 # Obsidian to typst changelog
 
+## 0.2.3
+
+### Features
+
+1. Support embedding PDFs in obsidian documents
+
 ## 0.1.3
 
 ### Fixes

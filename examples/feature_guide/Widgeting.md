@@ -5,6 +5,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sit amet tellus no
 ![[hello_widget.png|500]]
 - ![[hello_widget.png|500]]
 
+![[widget_datasheet.pdf|500]]
+
 Proin et ultrices leo, et malesuada nulla. Nulla eget dui sem. Sed pellentesque ipsum ultrices mauris vestibulum lobortis. Praesent felis lorem, fermentum et nibh nec, viverra suscipit diam. Pellentesque non dui commodo, ultrices nunc id, facilisis nisl. Etiam non risus aliquet, consequat massa vel, scelerisque tortor. Etiam nulla quam, sagittis quis porta sit amet, lobortis quis purus. Donec dolor purus, semper vel felis quis, viverra euismod eros. Maecenas elementum dictum metus, sit amet rhoncus quam rutrum quis.
 
 ## Left widgeting

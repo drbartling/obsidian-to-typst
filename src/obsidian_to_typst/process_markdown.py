@@ -189,7 +189,13 @@ def is_image(line: str) -> bool:
     if not m:
         return False
     file_name = m.group(1)
-    return Path(file_name).suffix.lower() in [".jpg", ".png", ".bmp", ".svg"]
+    return Path(file_name).suffix.lower() in [
+        ".jpg",
+        ".png",
+        ".bmp",
+        ".svg",
+        ".pdf",
+    ]
 
 
 @pydantic.validate_call

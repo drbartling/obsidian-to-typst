@@ -37,6 +37,7 @@ target-version = "py313"
 # https://docs.astral.sh/ruff/rules/
 select = ["ALL"]
 ignore = [
+    "CPY001",  # https://docs.astral.sh/ruff/rules/missing-copyright-notice/
     "COM812",  # https://docs.astral.sh/ruff/rules/missing-trailing-comma/
     "D",  # https://docs.astral.sh/ruff/rules/#pydoclint-doc
     "E501",  # https://docs.astral.sh/ruff/rules/line-too-long/
