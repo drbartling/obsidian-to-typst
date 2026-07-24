@@ -35,5 +35,8 @@ jobs:
         node-version: '22'
     - name: Install mermaid-cli
       run: npm install -g @mermaid-js/mermaid-cli
+    - name: Allow Chrome sandbox on Ubuntu 24.04+
+      if: runner.os == 'Linux'
+      run: sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0
     - name: Run tests
       run: just test
