@@ -23,7 +23,7 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v7
     - uses: extractions/setup-just@v4
-    - uses: cargo-bins/cargo-binstall@main
+    - uses: cargo-bins/cargo-binstall@v1.21.0
     - name: Install Typst
       run: just install-typst
     - name: Install uv
@@ -31,7 +31,7 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: '22'
     - name: Install mermaid-cli
