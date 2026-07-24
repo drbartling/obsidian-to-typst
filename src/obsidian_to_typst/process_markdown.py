@@ -421,10 +421,14 @@ def split_italics(text: str) -> tuple[str, str]:
 
 @pydantic.validate_call
 def split_link(text: str) -> tuple[str, str]:
+    # Wikilinks (document/paragraph links) are tried before markdown links
+    # because they're anchored on a literal `]]`. Trying split_markdown_link
+    # first can otherwise match past a `[[wikilink]]` and into a later,
+    # unrelated markdown link on the same line.
     return (
-        split_markdown_link(text)
-        or split_document_link(text)
+        split_document_link(text)
         or split_paragraph_link(text)
+        or split_markdown_link(text)
         or (R"\[", text)
     )
 

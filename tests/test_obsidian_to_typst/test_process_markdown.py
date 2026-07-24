@@ -119,3 +119,22 @@ is_image_params = [
 @pytest.mark.parametrize(("input_text", "expected"), is_image_params)
 def test_is_image(input_text: str, expected: bool) -> None:
     assert process_markdown.is_image(input_text) == expected
+
+
+def test_wikilink_then_markdown_link_on_same_line() -> None:
+    input_text = (
+        "The [[HVC]] command and response size "
+        "([HVC_CMD_SIZE](https://example.com/hvc_commands.h#L19)) "
+        "is limited to 23 bytes."
+    )
+    expected = (
+        "The #link(<file_hvc_md>)[HVC] command and response size "
+        "(\\href{https://example.com/hvc_commands.h#L19}{HVC_CMD_SIZE}) "
+        "is limited to 23 bytes."
+    )
+    with mock.patch(
+        "obsidian_to_typst.process_markdown.obsidian_path.find_file"
+    ) as p:
+        p.return_value = Path(obsidian_path.VAULT_ROOT / "HVC.md")
+        result = process_markdown.string_to_typst(input_text)
+    assert result == expected
