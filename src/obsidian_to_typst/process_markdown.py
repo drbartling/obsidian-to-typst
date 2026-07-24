@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 import pydantic
+import pypdf
 from pydantic.dataclasses import dataclass
 
 from obsidian_to_typst import obsidian_path
@@ -240,8 +241,32 @@ def include_image(
     width_text = R"80%" if width is None else f"{int(width / 2)}pt"
     height_text = "" if height is None else f"height:{int(height / 2)}pt,"
 
-    image_path = obsidian_path.root_path(image_path)
-    return f'#image("{image_path}",width:{width_text},{height_text})'
+    if image_path.suffix.lower() == ".pdf":
+        return include_pdf(image_path, width_text, height_text)
+
+    root_relative_path = obsidian_path.root_path(image_path)
+    return f'#image("{root_relative_path}",width:{width_text},{height_text})'
+
+
+@pydantic.validate_call
+def include_pdf(image_path: Path, width_text: str, height_text: str) -> str:
+    # Typst's #image only renders a single page of a PDF (page 1 by
+    # default), which silently drops the rest of a multi-page report.
+    # Render every page as its own image, separated by page breaks, so
+    # embedding a PDF actually includes the whole document.
+    root_relative_path = obsidian_path.root_path(image_path)
+    page_count = pdf_page_count(image_path)
+    pages = [
+        f'#image("{root_relative_path}",width:{width_text},'
+        f"{height_text}page:{page})"
+        for page in range(1, page_count + 1)
+    ]
+    return "\n#pagebreak()\n".join(pages)
+
+
+@pydantic.validate_call
+def pdf_page_count(pdf_path: Path) -> int:
+    return len(pypdf.PdfReader(pdf_path).pages)
 
 
 @pydantic.validate_call

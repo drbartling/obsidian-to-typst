@@ -4,9 +4,18 @@ from pathlib import Path
 from unittest import mock
 
 import devtools
+import pypdf
 import pytest
 
 from obsidian_to_typst import obsidian_path, process_markdown
+
+
+def make_pdf(path: Path, page_count: int) -> None:
+    writer = pypdf.PdfWriter()
+    for _ in range(page_count):
+        writer.add_blank_page(width=72, height=72)
+    with path.open("wb") as f:
+        writer.write(f)
 
 
 def file_line() -> str:
@@ -74,20 +83,6 @@ split_embedded_doc_params = [
         "![[foo.jpg]] and more text",
         (
             '#image("/foo.jpg",width:80%,)',
-            " and more text",
-        ),
-    ),
-    (
-        "![[foo.pdf]]",
-        (
-            '#image("/foo.pdf",width:80%,)',
-            "",
-        ),
-    ),
-    (
-        "![[foo.pdf]] and more text",
-        (
-            '#image("/foo.pdf",width:80%,)',
             " and more text",
         ),
     ),
@@ -187,3 +182,45 @@ def test_embed_markdown_falls_back_to_leading_label_without_heading(
         result = process_markdown.embed_markdown("![[Widgeting]]")
 
     assert result.startswith("<file_widgeting_md>")
+
+
+def test_include_image_embeds_all_pdf_pages(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "report.pdf"
+    make_pdf(pdf_path, 3)
+
+    with mock.patch(
+        "obsidian_to_typst.process_markdown.obsidian_path.root_path"
+    ) as p:
+        p.return_value = "/report.pdf"
+        result = process_markdown.include_image(pdf_path, None, None)
+
+    assert result == (
+        '#image("/report.pdf",width:80%,page:1)\n'
+        "#pagebreak()\n"
+        '#image("/report.pdf",width:80%,page:2)\n'
+        "#pagebreak()\n"
+        '#image("/report.pdf",width:80%,page:3)'
+    )
+
+
+def test_include_image_single_page_pdf_has_no_pagebreak(
+    tmp_path: Path,
+) -> None:
+    pdf_path = tmp_path / "single.pdf"
+    make_pdf(pdf_path, 1)
+
+    with mock.patch(
+        "obsidian_to_typst.process_markdown.obsidian_path.root_path"
+    ) as p:
+        p.return_value = "/single.pdf"
+        result = process_markdown.include_image(pdf_path, None, None)
+
+    assert result == '#image("/single.pdf",width:80%,page:1)'
+
+
+def test_pdf_page_count(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "multi.pdf"
+    expected_page_count = 5
+    make_pdf(pdf_path, expected_page_count)
+
+    assert process_markdown.pdf_page_count(pdf_path) == expected_page_count

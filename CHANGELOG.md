@@ -1,5 +1,11 @@
 # Obsidian to typst changelog
 
+## 0.2.5
+
+### Fixes
+
+1. Embed every page of a PDF, instead of only the first page
+
 ## 0.2.4
 
 ### Features
