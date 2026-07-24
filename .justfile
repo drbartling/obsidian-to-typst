@@ -14,13 +14,17 @@ loop:
 # install the uv package manager
 [linux]
 [macos]
-install_uv:
+install-uv:
     @curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # install the uv package manager
 [windows]
-install_uv:
+install-uv:
     @powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Installs typst cli to render PDFs
+install-typst:
+    @cargo install typst-cli
 
 test: check
     @uv run pytest
