@@ -112,6 +112,7 @@ is_image_params = [
     ("![[foo.svg]]", True),
     ("![[foo.pdf]]", True),
     ("![[foo.md]]", False),
+    ("![[TASER_10_T19C36177_Log_2026-03-10_1453.pdf]]", True),
 ]
 
 

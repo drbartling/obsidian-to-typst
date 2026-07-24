@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 referenced_docs = set()
 docs_embedded = set()
 
-EMBEDDED_IMAGE_REGEX = r"!\[\[([\s_a-zA-Z0-9.]*)\|?([0-9]+)?x?([0-9]+)?]]"
+EMBEDDED_IMAGE_REGEX = r"!\[\[([\s_a-zA-Z0-9.-]*)\|?([0-9]+)?x?([0-9]+)?]]"
 
 
 @dataclass

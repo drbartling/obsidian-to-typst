@@ -1,5 +1,11 @@
 # Obsidian to typst changelog
 
+## 0.2.4
+
+### Fixes
+
+1. Support hyphens in embedded file names
+
 ## 0.2.3
 
 ### Features
