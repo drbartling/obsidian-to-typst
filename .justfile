@@ -34,7 +34,3 @@ fix: format
 
 format:
     @uv run ruff format
-
-setup:
-    @uv venv --python 3.13.0
-    @uv sync

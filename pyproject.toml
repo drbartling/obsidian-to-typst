@@ -8,10 +8,10 @@ requires-python = ">=3.11,<3.15"
 version = "0.2.3"
 dependencies = [
     "click>=8.2.1",
-    "colorama >=0.4.6",
-    "coloredlogs >=15.0.1",
-    "colored-traceback >=0.3.0",
-    "pydantic >=2.7.1",
+    "colorama>=0.4.6",
+    "colored-traceback>=0.4.2",
+    "coloredlogs>=15.0.1",
+    "pydantic>=2.13.4",
 ]
 
 [project.urls]
@@ -23,7 +23,7 @@ obsidian-to-typst = "obsidian_to_typst.obsidian_to_typst:main"
 [dependency-groups]
 dev = [
     "coverage>=7.10.5",
-    "devtools >=0.12.2",
+    "devtools>=0.12.2",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "ruff>=0.12.10",
