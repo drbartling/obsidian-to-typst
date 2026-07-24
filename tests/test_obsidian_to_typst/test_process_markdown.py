@@ -138,3 +138,52 @@ def test_wikilink_then_markdown_link_on_same_line() -> None:
         p.return_value = Path(obsidian_path.VAULT_ROOT / "HVC.md")
         result = process_markdown.string_to_typst(input_text)
     assert result == expected
+
+
+def test_heading_name_link_resolves_to_heading_label() -> None:
+    input_text = (
+        "### Design Comparison\n"
+        "\n"
+        "Some comparison text.\n"
+        "\n"
+        "See [[#Design Comparison]] below for more.\n"
+    )
+    result = process_markdown.obsidian_to_typst(input_text)
+    assert (
+        "#heading(level:2)[Design Comparison] <heading-design-comparison>"
+        in result
+    )
+    assert "#link(<heading-design-comparison>)[Design Comparison]" in result
+
+
+def test_embed_markdown_attaches_label_to_first_heading(tmp_path: Path) -> None:
+    embedded_file = tmp_path / "FIFO.md"
+    embedded_file.write_text("## FIFO\n\nSome content.\n", encoding="UTF-8")
+    process_markdown.STATE.heading_depth = 4
+
+    with mock.patch(
+        "obsidian_to_typst.process_markdown.obsidian_path.find_file"
+    ) as p:
+        p.return_value = embedded_file
+        result = process_markdown.embed_markdown("![[FIFO]]")
+
+    assert "#heading(level:4)[FIFO] <file_fifo_md>" in result
+    assert "<heading-fifo>" not in result
+    assert not result.startswith("<file_fifo_md>")
+
+
+def test_embed_markdown_falls_back_to_leading_label_without_heading(
+    tmp_path: Path,
+) -> None:
+    embedded_file = tmp_path / "Widgeting.md"
+    embedded_file.write_text(
+        "Some content with no heading.\n", encoding="UTF-8"
+    )
+
+    with mock.patch(
+        "obsidian_to_typst.process_markdown.obsidian_path.find_file"
+    ) as p:
+        p.return_value = embedded_file
+        result = process_markdown.embed_markdown("![[Widgeting]]")
+
+    assert result.startswith("<file_widgeting_md>")

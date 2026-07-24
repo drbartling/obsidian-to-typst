@@ -2,9 +2,15 @@
 
 ## 0.2.4
 
+### Features
+
+1. Support linking to a heading by name with `[[#Heading Name]]`
+
 ### Fixes
 
 1. Support hyphens in embedded file names
+2. Fix wikilinks being mangled when followed by a markdown link on the same line
+3. Fix embedded files' labels attaching to the wrong (preceding) heading, causing duplicate-label warnings when the preceding heading is also labelled
 
 ## 0.2.3
 

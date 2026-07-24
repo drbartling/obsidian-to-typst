@@ -34,6 +34,7 @@ class State:
     file: list[Path]
     temp_dir: Path | None
     typst_block: int | None
+    pending_file_label: str | None
 
     @classmethod
     def new(cls) -> "State":
@@ -46,6 +47,7 @@ class State:
             file=[],
             temp_dir=None,
             typst_block=None,
+            pending_file_label=None,
         )
 
     def init(self, temp_dir: Path, file: Path) -> None:
@@ -57,6 +59,7 @@ class State:
         self.file = [file]
         self.temp_dir = temp_dir
         self.typst_block = None
+        self.pending_file_label = None
 
 
 STATE: State = State.new()
@@ -128,8 +131,19 @@ def line_to_section(line: str) -> str:
     if STATE.heading_depth not in section_lookup:
         return line + "\n\n"
 
+    # Typst only allows a single label per element, so if this heading is
+    # the first heading of an embedded file, its file-reference label takes
+    # priority over the auto-generated heading-name label. (A label placed
+    # before an element in Typst attaches to whatever precedes it, not to
+    # the element that follows, so the file label has to live here instead
+    # of before the heading.)
+    if STATE.pending_file_label:
+        label = STATE.pending_file_label
+        STATE.pending_file_label = None
+    else:
+        label = heading_ref_label(line)
     line = string_to_typst(line)
-    return f"#heading(level:{STATE.heading_depth - 1})[{line}]"
+    return f"#heading(level:{STATE.heading_depth - 1})[{line}] <{label}>"
 
 
 @pydantic.validate_call
@@ -171,15 +185,23 @@ def embed_markdown(embed_line: str) -> str:
     STATE.file.append(file)
     current_parent_depth = STATE.parent_heading_depth
     STATE.parent_heading_depth = STATE.heading_depth - 1
+    ref_label = file_ref_label(file)
+    current_pending_label = STATE.pending_file_label
+    STATE.pending_file_label = ref_label
     try:
         result = obsidian_to_typst(text)
     finally:
         STATE.file.pop()
         STATE.heading_depth = STATE.parent_heading_depth + 1
         STATE.parent_heading_depth = current_parent_depth
+        label_was_consumed = STATE.pending_file_label is None
+        STATE.pending_file_label = current_pending_label
 
-    ref_label = file_ref_label(file)
     docs_embedded.add(ref_label)
+    if label_was_consumed:
+        return result
+    # No heading was found in the embedded file to carry the label, so fall
+    # back to a standalone label at the top of the embedded content.
     return file_label(file) + result
 
 
@@ -421,13 +443,14 @@ def split_italics(text: str) -> tuple[str, str]:
 
 @pydantic.validate_call
 def split_link(text: str) -> tuple[str, str]:
-    # Wikilinks (document/paragraph links) are tried before markdown links
-    # because they're anchored on a literal `]]`. Trying split_markdown_link
-    # first can otherwise match past a `[[wikilink]]` and into a later,
-    # unrelated markdown link on the same line.
+    # Wikilinks (document/paragraph/heading links) are tried before markdown
+    # links because they're anchored on a literal `]]`. Trying
+    # split_markdown_link first can otherwise match past a `[[wikilink]]`
+    # and into a later, unrelated markdown link on the same line.
     return (
         split_document_link(text)
         or split_paragraph_link(text)
+        or split_heading_link(text)
         or split_markdown_link(text)
         or (R"\[", text)
     )
@@ -494,6 +517,52 @@ def split_paragraph_link(text: str) -> tuple[str, str] | None:
     link, disp_text, unprocessed_text = m.groups()
     disp_text = sanitize_special_characters(disp_text)
     processed_text = f"#link(<{link}>)[{disp_text}]"
+    return processed_text, unprocessed_text
+
+
+@pydantic.validate_call
+def heading_ref_label(heading_text: str) -> str:
+    """
+    >>> heading_ref_label("Design Comparison")
+    'heading-design-comparison'
+
+    >>> heading_ref_label("  HV Time Reference! ")
+    'heading-hv-time-reference'
+    """
+    slug = (
+        re.sub(r"[^a-zA-Z0-9]+", "-", heading_text.strip()).strip("-").lower()
+    )
+    return f"heading-{slug}"
+
+
+@pydantic.validate_call
+def split_heading_link(text: str) -> tuple[str, str] | None:
+    """
+    >>> text = ""
+    >>> split_heading_link(text) is None
+    True
+
+    >>> text = "[#^foo]] and more text"
+    >>> split_heading_link(text) is None
+    True
+
+    >>> text = "[#Design Comparison]] below"
+    >>> split_heading_link(text)
+    ('#link(<heading-design-comparison>)[Design Comparison]', ' below')
+
+    >>> text = "[#Design Comparison|the comparison]] below"
+    >>> split_heading_link(text)
+    ('#link(<heading-design-comparison>)[the comparison]', ' below')
+    """
+    m = re.match(r"\[#(?!\^)([^\[\]|]+?)(?:\|([^\[\]]+?))?]](.*)", text)
+    if not m:
+        return None
+    heading_name, disp_text, unprocessed_text = m.groups()
+    label = heading_ref_label(heading_name)
+    disp_text = (
+        sanitize_special_characters(disp_text) if disp_text else heading_name
+    )
+    processed_text = f"#link(<{label}>)[{disp_text}]"
     return processed_text, unprocessed_text
 
 
