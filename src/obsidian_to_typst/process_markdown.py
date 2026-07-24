@@ -297,8 +297,8 @@ def process_mermaid_diagram() -> None:  # pragma: no cover
         f.write(STATE.code_buffer)
     cmd_str = (
         "mmdc "
-        f"--input '{mmd_file}' "
-        f"--output '{img_file}' "
+        f'--input "{mmd_file}" '
+        f'--output "{img_file}" '
         "--backgroundColor transparent "
         "--scale 4 "
     )
