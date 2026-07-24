@@ -315,7 +315,7 @@ def process_mermaid_diagram() -> None:  # pragma: no cover
 
 
 def root_check() -> str:
-    if os.geteuid() == 0:
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
         config_file = obsidian_path.TEMP_FOLDER / "pup.json"
         with config_file.open("w", encoding="UTF-8") as f:
             f.write('{"args": ["--no-sandbox"]}')
