@@ -34,7 +34,7 @@ install-uv:
     @powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # Installs typst cli to render PDFs
-install-typst: install-cargo-binstall
+install-typst:
     @cargo binstall typst-cli
 
 test: check

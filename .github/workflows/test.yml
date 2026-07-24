@@ -6,6 +6,9 @@ jobs:
   unit-test:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +23,7 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v7
     - uses: extractions/setup-just@v4
+    - uses: cargo-bins/cargo-binstall@main
     - name: Install Typst
       run: just install-typst
     - name: Install uv
@@ -37,4 +41,3 @@ jobs:
       run: sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0
     - name: Run tests
       run: just test
-      shell: bash
