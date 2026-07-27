@@ -1,6 +1,6 @@
 # Obsidian to typst changelog
 
-## Unreleased
+## 0.2.6
 
 ### Changes
 

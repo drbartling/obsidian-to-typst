@@ -5,7 +5,7 @@ license = "MIT"
 name = "obsidian-to-typst"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
     "click>=8.2.1",
     "colorama>=0.4.6",

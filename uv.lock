@@ -195,7 +195,7 @@ wheels = [
 
 [[package]]
 name = "obsidian-to-typst"
-version = "0.2.5"
+version = "0.2.6"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
