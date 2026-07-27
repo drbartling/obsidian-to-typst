@@ -51,6 +51,15 @@ obsidian_to_tex_params = [
         ("Hello, World!\n"),
         ("Hello, World!\n"),
     ),
+    (
+        f"{file_line()} Mermaid diagram",
+        ("```mermaid\nflowchart LR\n\twidget --> lw[left widgeting]\n```\n"),
+        (
+            '\n\n#import "@preview/merman:0.1.0": mermaid\n'
+            '#mermaid("flowchart LR\n\twidget --> lw[left widgeting]\n", '
+            "width: 80%)\n"
+        ),
+    ),
 ]
 
 
@@ -60,10 +69,7 @@ obsidian_to_tex_params = [
 def test_obsidian_to_tex(
     test_name: str, input_text: str, expected: str
 ) -> None:
-    with mock.patch(
-        "obsidian_to_typst.process_markdown.process_mermaid_diagram"
-    ):
-        result = process_markdown.obsidian_to_typst(input_text)
+    result = process_markdown.obsidian_to_typst(input_text)
 
     devtools.debug(test_name)
     devtools.debug(result)

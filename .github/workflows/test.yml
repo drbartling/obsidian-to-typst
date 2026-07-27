@@ -30,14 +30,5 @@ jobs:
       uses: astral-sh/setup-uv@v9.0.0
       with:
         python-version: ${{ matrix.python }}
-    - name: Setup Node.js
-      uses: actions/setup-node@v7
-      with:
-        node-version: '22'
-    - name: Install mermaid-cli
-      run: npm install -g @mermaid-js/mermaid-cli
-    - name: Allow Chrome sandbox on Ubuntu 24.04+
-      if: runner.os == 'Linux'
-      run: sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0
     - name: Run tests
       run: just test

@@ -1,7 +1,5 @@
 import logging
-import os
 import re
-import subprocess
 from pathlib import Path
 
 import pydantic
@@ -285,13 +283,7 @@ def toggle_code_block(
         lang = line[3:]
         if "mermaid" == lang:
             STATE.mermaid_block = lineno
-            lines = [
-                R"",
-                R"#image(",
-                f'"{STATE.file[-1].stem}_{STATE.mermaid_block}.png",',
-                R"width: 80%)",
-            ]
-            return "\n".join(lines)
+            return ""
 
         if "typst" == lang:
             STATE.code_block = lineno
@@ -324,50 +316,25 @@ def toggle_code_block(
             ")",
         ]
     if STATE.mermaid_block:
-        assert STATE.temp_dir, STATE.temp_dir
-        process_mermaid_diagram()
         STATE.mermaid_block = None
-        lines = []
+        lines = [mermaid_block_to_typst()]
     return "\n".join(lines)
 
 
 @pydantic.validate_call
-def process_mermaid_diagram() -> None:  # pragma: no cover
-    assert STATE.temp_dir, STATE.temp_dir
-    assert STATE.mermaid_block, STATE.mermaid_block
-    assert STATE.file, STATE.file
-    mmd_file: Path = (
-        STATE.temp_dir / f"{STATE.file[-1].stem}_{STATE.mermaid_block}.mmd"
-    )
-    img_file = mmd_file.with_suffix(".png")
-    with mmd_file.open("w", encoding="UTF-8") as f:
-        f.write(STATE.code_buffer)
-    cmd_str = (
-        "mmdc "
-        f'--input "{mmd_file}" '
-        f'--output "{img_file}" '
-        "--backgroundColor transparent "
-        "--scale 4 "
-    )
-    cmd_str += root_check()
-    try:
-        subprocess.run(cmd_str, shell=True, check=True)  # noqa: S602
-    except subprocess.CalledProcessError:
-        _logger.error(
-            "Failed to generate MMD diagram for `%s` with command `%s`.",
-            STATE.file[-1],
-            cmd_str,
-        )
-        raise
+def mermaid_block_to_typst() -> str:
+    mermaid_package = "@preview/merman:0.1.0"
+    lines = [
+        R"",
+        f'#import "{mermaid_package}": mermaid',
+        f'#mermaid("{escape_mermaid_source(STATE.code_buffer)}", width: 80%)',
+    ]
+    return "\n".join(lines)
 
 
-def root_check() -> str:
-    if hasattr(os, "geteuid") and os.geteuid() == 0:
-        config_file = obsidian_path.TEMP_FOLDER / "pup.json"
-        with config_file.open("w", encoding="UTF-8") as f:
-            f.write('{"args": ["--no-sandbox"]}')
-        return f' --puppeteerConfigFile "{config_file}" '
-    return ""
+@pydantic.validate_call
+def escape_mermaid_source(text: str) -> str:
+    return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
 @pydantic.validate_call

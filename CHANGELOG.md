@@ -1,5 +1,11 @@
 # Obsidian to typst changelog
 
+## Unreleased
+
+### Changes
+
+1. Simplify setup, and speed up diagram processing by using [merman](https://typst.app/universe/package/merman)
+
 ## 0.2.5
 
 ### Fixes
